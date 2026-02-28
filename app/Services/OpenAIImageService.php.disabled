@@ -1,0 +1,214 @@
+<?php
+
+namespace App\Services;
+
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+
+class OpenAIImageService
+{
+    protected $apiKey;
+    protected $apiUrl = 'https://api.openai.com/v1/images';
+    protected $timeout = 120;
+
+    public function __construct()
+    {
+        $this->apiKey = env('OPENAI_API_KEY');
+    }
+
+    /**
+     * Generate image from prompt (text-to-image)
+     */
+    public function generateFromPrompt($prompt)
+    {
+        if (!$this->apiKey) {
+            throw new \Exception('OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file.');
+        }
+
+        Log::info('Generating image from prompt', ['prompt' => $prompt]);
+
+        $response = Http::timeout($this->timeout)
+            ->withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])
+            ->post($this->apiUrl . '/generations', [
+                'model' => 'dall-e-3',
+                'prompt' => $prompt,
+                'n' => 1,
+                'size' => '1024x1024',
+                'quality' => 'hd',
+                'response_format' => 'b64_json'
+            ]);
+
+        if (!$response->successful()) {
+            Log::error('OpenAI API Error', [
+                'status' => $response->status(),
+                'error' => $response->body()
+            ]);
+            throw new \Exception('OpenAI API Error: ' . $response->body());
+        }
+
+        $result = $response->json();
+        $imageData = base64_decode($result['data'][0]['b64_json']);
+        
+        return $this->saveImage($imageData);
+    }
+
+    /**
+     * Transform existing image (image-to-image with edits)
+     */
+    public function processImage($imagePath, $prompt)
+    {
+        Log::info('Processing image with OpenAI', [
+            'image' => $imagePath,
+            'prompt' => $prompt
+        ]);
+
+        // First, analyze the image with Grok Vision
+        $description = $this->analyzeImageWithGrok($imagePath);
+        
+        Log::info('Image analyzed', ['description_preview' => substr($description, 0, 100)]);
+        
+        // Create enhanced prompt that combines description with transformation request
+        $enhancedPrompt = "Create an image based on this description: {$description}. "
+                        . "Apply these modifications: {$prompt}. "
+                        . "Maintain the original composition, subjects, and overall scene, "
+                        . "but apply the requested changes in style, colors, effects, or mood.";
+        
+        Log::info('Enhanced prompt created', ['prompt_length' => strlen($enhancedPrompt)]);
+        
+        // Generate new image based on description + prompt
+        return $this->generateFromPrompt($enhancedPrompt);
+    }
+
+    /**
+     * Analyze image using Grok Vision
+     */
+    protected function analyzeImageWithGrok($imagePath)
+    {
+        $grokKey = env('GROK_API_KEY');
+        
+        if (!$grokKey) {
+            Log::warning('Grok API key not found, using basic description');
+            return 'an image';
+        }
+
+        $imageData = base64_encode(file_get_contents($imagePath));
+        $mimeType = mime_content_type($imagePath);
+
+        try {
+            $response = Http::timeout(60)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $grokKey,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post('https://api.x.ai/v1/chat/completions', [
+                    'model' => 'grok-2-vision-1212',
+                    'messages' => [
+                        [
+                            'role' => 'user',
+                            'content' => [
+                                [
+                                    'type' => 'text',
+                                    'text' => 'Describe this image in extreme detail for image generation purposes. Include: main subjects, their positions, colors, lighting, background, style, mood, composition, and any important details. Be very specific and descriptive.'
+                                ],
+                                [
+                                    'type' => 'image_url',
+                                    'image_url' => [
+                                        'url' => "data:{$mimeType};base64,{$imageData}"
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'max_tokens' => 1000
+                ]);
+
+            if ($response->successful()) {
+                $result = $response->json();
+                return $result['choices'][0]['message']['content'] ?? 'an image';
+            }
+        } catch (\Exception $e) {
+            Log::error('Grok analysis failed', ['error' => $e->getMessage()]);
+        }
+
+        return 'an image';
+    }
+
+    /**
+     * Save generated image
+     */
+    protected function saveImage($imageData)
+    {
+        $fileName = Str::uuid() . '.png';
+        $outputPath = storage_path('app/public/processed/' . $fileName);
+        
+        if (!file_exists(dirname($outputPath))) {
+            mkdir(dirname($outputPath), 0755, true);
+        }
+        
+        file_put_contents($outputPath, $imageData);
+        
+        Log::info('OpenAI image saved successfully', ['path' => $outputPath]);
+        
+        return $outputPath;
+    }
+
+    /**
+     * Process video (extract frame and process)
+     */
+    public function processVideo($videoPath, $prompt)
+    {
+        Log::info('Processing video', ['path' => $videoPath]);
+
+        $thumbnailPath = $this->extractVideoThumbnail($videoPath);
+        
+        if ($thumbnailPath) {
+            $result = $this->processImage($thumbnailPath, $prompt);
+            
+            // Clean up thumbnail
+            if (file_exists($thumbnailPath)) {
+                @unlink($thumbnailPath);
+            }
+            
+            return $result;
+        }
+        
+        throw new \Exception('Video processing requires FFmpeg. Please install FFmpeg first.');
+    }
+
+    /**
+     * Extract thumbnail from video using FFmpeg
+     */
+    protected function extractVideoThumbnail($videoPath)
+    {
+        $ffmpegPath = exec('which ffmpeg');
+        
+        if (empty($ffmpegPath)) {
+            Log::warning('FFmpeg not found');
+            return null;
+        }
+
+        $outputPath = storage_path('app/public/temp/' . Str::uuid() . '.jpg');
+        
+        if (!file_exists(dirname($outputPath))) {
+            mkdir(dirname($outputPath), 0755, true);
+        }
+
+        $command = "{$ffmpegPath} -i " . escapeshellarg($videoPath) 
+                 . " -ss 00:00:01 -vframes 1 " 
+                 . escapeshellarg($outputPath) . " 2>&1";
+        
+        exec($command, $output, $returnCode);
+
+        if ($returnCode === 0 && file_exists($outputPath)) {
+            Log::info('Video thumbnail extracted', ['path' => $outputPath]);
+            return $outputPath;
+        }
+
+        Log::error('Failed to extract video thumbnail', ['return_code' => $returnCode]);
+        return null;
+    }
+}
