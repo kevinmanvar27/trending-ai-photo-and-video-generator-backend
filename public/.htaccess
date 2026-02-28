@@ -4,6 +4,10 @@
     </IfModule>
 
     RewriteEngine On
+    
+    # Force environment variables
+    SetEnv DB_DATABASE trends
+    SetEnv DB_CONNECTION mysql
 
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .

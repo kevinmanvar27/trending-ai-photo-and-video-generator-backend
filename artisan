@@ -6,6 +6,9 @@ use Symfony\Component\Console\Input\ArgvInput;
 
 define('LARAVEL_START', microtime(true));
 
+// Force correct environment variables from .env file
+require __DIR__.'/bootstrap/force_env.php';
+
 // Register the Composer autoloader...
 require __DIR__.'/vendor/autoload.php';
 

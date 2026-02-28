@@ -1,5 +1,34 @@
 <?php
 
+/**
+ * Helper function to get setting from database with fallback to env
+ * Priority: Database > Environment > Default
+ */
+if (!function_exists('getSettingOrEnv')) {
+    function getSettingOrEnv($key, $envKey, $default = null) {
+        try {
+            // First try database setting (highest priority)
+            if (class_exists(\App\Models\Setting::class)) {
+                $dbValue = \App\Models\Setting::get($key);
+                if ($dbValue !== null && $dbValue !== '') {
+                    return $dbValue;
+                }
+            }
+        } catch (\Exception $e) {
+            // Database might not be available yet (during migration, etc.)
+        }
+        
+        // Then try environment variable
+        $envValue = env($envKey);
+        if ($envValue !== null && $envValue !== '') {
+            return $envValue;
+        }
+        
+        // Finally return default
+        return $default;
+    }
+}
+
 return [
 
     /*
@@ -16,14 +45,14 @@ return [
     */
 
     'grok' => [
-        'api_key' => 'xai-kPc611NdCJlutFkMIJZpQ3NtNRyzfGlWTfEF0FovCOBe9T4yjb8ugNfS1SLyqdthH8AFB8tWCF41nf9P',
+        'api_key' => getSettingOrEnv('grok_api_key', 'GROK_API_KEY', ''),
         
         // Grok Vision API (for image analysis)
-        'vision_api_url' => env('GROK_VISION_API_URL', 'https://api.x.ai/v1/chat/completions'),
+        'vision_api_url' => getSettingOrEnv('grok_vision_api_url', 'GROK_VISION_API_URL', 'https://api.x.ai/v1/chat/completions'),
         'vision_model' => env('GROK_VISION_MODEL', 'grok-2-vision-1212'),
         
         // Grok Imagine API (for image generation)
-        'imagine_api_url' => env('GROK_IMAGINE_API_URL', 'https://api.x.ai/v1/images/generations'),
+        'imagine_api_url' => getSettingOrEnv('grok_imagine_api_url', 'GROK_IMAGINE_API_URL', 'https://api.x.ai/v1/images/generations'),
         'imagine_model' => env('GROK_IMAGINE_MODEL', 'grok-imagine-image'),
         'imagine_size' => env('GROK_IMAGINE_SIZE', '1024x1024'),
         'imagine_quality' => 'high',
@@ -31,13 +60,13 @@ return [
         // Grok Video API (for video generation from images)
         // NOTE: This API is experimental and may require specific image URL formats
         // See VIDEO_API_STATUS.md for current status and troubleshooting
-        'video_api_url' => env('GROK_VIDEO_API_URL', 'https://api.x.ai/v1/videos/generations'),
+        'video_api_url' => getSettingOrEnv('grok_video_api_url', 'GROK_VIDEO_API_URL', 'https://api.x.ai/v1/videos/generations'),
         'video_model' => env('GROK_VIDEO_MODEL', 'grok-imagine-video'),
         'video_duration' => env('GROK_VIDEO_DURATION', 5), // seconds
         'video_fps' => env('GROK_VIDEO_FPS', 24),
         
         'max_tokens' => (int) env('GROK_MAX_TOKENS', 2000),
-        'timeout' => (int) env('GROK_TIMEOUT', 180), // seconds
+        'timeout' => (int) getSettingOrEnv('grok_timeout', 'GROK_TIMEOUT', 180), // seconds
     ],
 
     /*

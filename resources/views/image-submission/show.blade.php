@@ -113,10 +113,15 @@
                 @endif
 
                 <!-- Processing Time -->
-                @if($submission->processing_started_at && $submission->processing_completed_at)
+                @if($submission->started_at && $submission->completed_at)
                 <div class="mt-4 text-sm text-gray-600">
                     <i class="fas fa-stopwatch mr-1"></i>
-                    Processing time: {{ $submission->processing_started_at->diffInSeconds($submission->processing_completed_at) }} seconds
+                    Processing time: {{ $submission->processing_time ?? $submission->started_at->diffInSeconds($submission->completed_at) }} seconds
+                </div>
+                @elseif($submission->processing_time)
+                <div class="mt-4 text-sm text-gray-600">
+                    <i class="fas fa-stopwatch mr-1"></i>
+                    Processing time: {{ $submission->processing_time }} seconds
                 </div>
                 @endif
             </div>
@@ -147,36 +152,25 @@
                         @if($submission->processed_image_path)
                             @php
                                 $extension = pathinfo($submission->processed_image_path, PATHINFO_EXTENSION);
-                                $isTextFile = in_array($extension, ['txt', 'text']);
-                                $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-                                $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm']);
+                                $outputType = $submission->output_type ?? 'image';
+                                $isVideo = ($outputType === 'video' || in_array($extension, ['mp4', 'mov', 'avi', 'webm']));
+                                $isImage = ($outputType === 'image' || in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp']));
                             @endphp
                             
-                            @if($isImage)
+                            @if($isVideo)
+                                <!-- Display processed video -->
+                                <video controls class="w-full h-auto" preload="metadata">
+                                    <source src="{{ Storage::url($submission->processed_image_path) }}" type="video/{{ $extension }}">
+                                    Your browser does not support the video tag.
+                                </video>
+                            @elseif($isImage)
                                 <!-- Display processed image -->
                                 <img src="{{ Storage::url($submission->processed_image_path) }}" 
                                      alt="Processed Result" 
                                      class="w-full h-auto">
-                            @elseif($isVideo)
-                                <!-- Display processed video -->
-                                <video controls class="w-full h-auto">
-                                    <source src="{{ Storage::url($submission->processed_image_path) }}" type="video/{{ $extension }}">
-                                    Your browser does not support the video tag.
-                                </video>
-                            @elseif($isTextFile)
-                                <!-- Display text analysis -->
-                                @php
-                                    $resultPath = storage_path('app/public/' . $submission->processed_image_path);
-                                    $resultText = file_exists($resultPath) ? file_get_contents($resultPath) : 'Result not available';
-                                @endphp
-                                <div class="p-6">
-                                    <div class="prose max-w-none">
-                                        <p class="text-gray-800 leading-relaxed whitespace-pre-wrap">{{ $resultText }}</p>
-                                    </div>
-                                </div>
                             @else
                                 <div class="p-8 flex items-center justify-center">
-                                    <p class="text-gray-500">Unsupported file format</p>
+                                    <p class="text-gray-500">Unsupported file format ({{ $extension }})</p>
                                 </div>
                             @endif
                         @else
@@ -195,13 +189,13 @@
                     <a href="{{ route('image-submission.download', $submission) }}" 
                        class="flex-1 bg-green-500 hover:bg-green-600 text-white py-4 rounded-lg font-medium text-center transition-colors duration-200">
                         <i class="fas fa-download mr-2"></i>
-                        Download AI Analysis
+                        Download {{ $submission->output_type === 'video' ? 'Video' : 'Image' }}
                     </a>
                     @endif
                     <a href="{{ route('image-submission.create', ['template' => $submission->template_id]) }}" 
                        class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-lg font-medium text-center transition-colors duration-200">
                         <i class="fas fa-redo mr-2"></i>
-                        Analyze Another Image
+                        Process Another Image
                     </a>
                     <a href="{{ route('image-submission.index') }}" 
                        class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-4 rounded-lg font-medium text-center transition-colors duration-200">

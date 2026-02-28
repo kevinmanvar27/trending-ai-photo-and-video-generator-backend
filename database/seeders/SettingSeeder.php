@@ -64,6 +64,38 @@ class SettingSeeder extends Seeder
                 'type' => 'password',
                 'group' => 'payment'
             ],
+            
+            // API Settings
+            [
+                'key' => 'grok_api_key',
+                'value' => '',
+                'type' => 'password',
+                'group' => 'api'
+            ],
+            [
+                'key' => 'grok_vision_api_url',
+                'value' => 'https://api.x.ai/v1/chat/completions',
+                'type' => 'text',
+                'group' => 'api'
+            ],
+            [
+                'key' => 'grok_imagine_api_url',
+                'value' => 'https://api.x.ai/v1/images/generations',
+                'type' => 'text',
+                'group' => 'api'
+            ],
+            [
+                'key' => 'grok_video_api_url',
+                'value' => 'https://api.x.ai/v1/videos/generations',
+                'type' => 'text',
+                'group' => 'api'
+            ],
+            [
+                'key' => 'grok_timeout',
+                'value' => '180',
+                'type' => 'number',
+                'group' => 'api'
+            ],
         ];
 
         foreach ($settings as $setting) {

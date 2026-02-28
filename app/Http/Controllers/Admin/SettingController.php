@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Helpers\EnvHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Artisan;
 
 class SettingController extends Controller
 {
@@ -38,6 +40,11 @@ class SettingController extends Controller
             'contact_email' => 'nullable|email|max:255',
             'contact_phone' => 'nullable|string|max:20',
             'address' => 'nullable|string|max:500',
+            'grok_api_key' => 'nullable|string|max:255',
+            'grok_vision_api_url' => 'nullable|url|max:500',
+            'grok_imagine_api_url' => 'nullable|url|max:500',
+            'grok_video_api_url' => 'nullable|url|max:500',
+            'grok_timeout' => 'nullable|integer|min:30|max:600',
         ]);
 
         // Handle file uploads
@@ -65,7 +72,7 @@ class SettingController extends Controller
             Setting::set('site_favicon', $faviconPath, 'image', 'appearance');
         }
 
-        // Save text settings
+        // Save text settings to database
         $textSettings = [
             'site_title' => ['type' => 'text', 'group' => 'general'],
             'site_description' => ['type' => 'textarea', 'group' => 'general'],
@@ -77,6 +84,11 @@ class SettingController extends Controller
             'contact_email' => ['type' => 'text', 'group' => 'general'],
             'contact_phone' => ['type' => 'text', 'group' => 'general'],
             'address' => ['type' => 'textarea', 'group' => 'general'],
+            'grok_api_key' => ['type' => 'password', 'group' => 'api'],
+            'grok_vision_api_url' => ['type' => 'text', 'group' => 'api'],
+            'grok_imagine_api_url' => ['type' => 'text', 'group' => 'api'],
+            'grok_video_api_url' => ['type' => 'text', 'group' => 'api'],
+            'grok_timeout' => ['type' => 'number', 'group' => 'api'],
         ];
 
         foreach ($textSettings as $key => $config) {
@@ -88,11 +100,52 @@ class SettingController extends Controller
         // Handle razorpay enabled checkbox
         Setting::set('razorpay_enabled', $request->has('razorpay_enabled') ? '1' : '0', 'boolean', 'payment');
 
+        // Prepare data for .env file update (map settings to ENV variables)
+        $envData = [];
+        
+        // Map Grok API settings to .env variables
+        if ($request->has('grok_api_key')) {
+            $envData['GROK_API_KEY'] = $request->input('grok_api_key');
+        }
+        if ($request->has('grok_vision_api_url')) {
+            $envData['GROK_VISION_API_URL'] = $request->input('grok_vision_api_url');
+        }
+        if ($request->has('grok_imagine_api_url')) {
+            $envData['GROK_IMAGINE_API_URL'] = $request->input('grok_imagine_api_url');
+        }
+        if ($request->has('grok_video_api_url')) {
+            $envData['GROK_VIDEO_API_URL'] = $request->input('grok_video_api_url');
+        }
+        if ($request->has('grok_timeout')) {
+            $envData['GROK_TIMEOUT'] = $request->input('grok_timeout');
+        }
+
+        // Update .env file with API settings
+        if (!empty($envData)) {
+            try {
+                EnvHelper::updateMultipleEnv($envData);
+                
+                // Clear config cache to reload .env values
+                Artisan::call('config:clear');
+            } catch (\Exception $e) {
+                // Log error but don't fail the entire update
+                \Log::error('Failed to update .env file: ' . $e->getMessage());
+            }
+        }
+
         // Clear settings cache
         Setting::clearCache();
+        
+        // Also clear config cache to ensure new API keys are loaded
+        try {
+            Artisan::call('cache:clear');
+            Artisan::call('config:clear');
+        } catch (\Exception $e) {
+            \Log::warning('Failed to clear cache: ' . $e->getMessage());
+        }
 
         return redirect()->route('admin.settings.index')
-            ->with('success', 'Settings updated successfully!');
+            ->with('success', 'Settings updated successfully! (Database & .env file updated). Cache cleared.');
     }
 
     /**
@@ -114,5 +167,82 @@ class SettingController extends Controller
         Setting::clearCache();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Test the Grok API key
+     */
+    public function testApiKey(Request $request)
+    {
+        try {
+            // Get API key from request or database
+            $apiKey = $request->input('api_key');
+            
+            if (empty($apiKey)) {
+                $apiKey = Setting::get('grok_api_key');
+            }
+            
+            if (empty($apiKey)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No API key provided. Please enter an API key first.'
+                ], 400);
+            }
+            
+            if ($apiKey === 'your_openai_api_key_here') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'API key is set to placeholder value. Please enter your actual API key from https://console.x.ai/'
+                ], 400);
+            }
+            
+            // Test the API key with a simple request
+            $apiUrl = Setting::get('grok_vision_api_url', 'https://api.x.ai/v1/chat/completions');
+            
+            $response = \Illuminate\Support\Facades\Http::timeout(30)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $apiKey,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post($apiUrl, [
+                    'model' => 'grok-2-vision-1212',
+                    'messages' => [
+                        [
+                            'role' => 'user',
+                            'content' => 'Test connection'
+                        ]
+                    ],
+                    'max_tokens' => 10
+                ]);
+            
+            if ($response->successful()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => '✓ API key is valid and working! Connection successful.'
+                ]);
+            }
+            
+            // Check for specific error types
+            $errorData = $response->json();
+            $errorMessage = 'API request failed';
+            
+            if (isset($errorData['error']['message'])) {
+                $errorMessage = $errorData['error']['message'];
+            } elseif (isset($errorData['error'])) {
+                $errorMessage = is_string($errorData['error']) ? $errorData['error'] : json_encode($errorData['error']);
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => '✗ API key test failed: ' . $errorMessage,
+                'status' => $response->status()
+            ], $response->status());
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => '✗ Error testing API key: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

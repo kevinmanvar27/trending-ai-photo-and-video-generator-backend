@@ -14,9 +14,17 @@ class UserImageSubmission extends Model
         'template_id',
         'original_image_path',
         'processed_image_path',
+        'output_type',
         'status',
         'error_message',
         'processing_time',
+        'started_at',
+        'completed_at',
+    ];
+
+    protected $casts = [
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     /**

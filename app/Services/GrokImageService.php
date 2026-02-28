@@ -22,17 +22,66 @@ class GrokImageService
 
     public function __construct()
     {
-        $this->apiKey = config('image-prompt.grok.api_key');
-        $this->visionApiUrl = config('image-prompt.grok.vision_api_url');
+        // Get API key with priority: Database > Config > Env
+        $this->apiKey = $this->getApiKey();
+        $this->visionApiUrl = $this->getSettingOrConfig('grok_vision_api_url', 'image-prompt.grok.vision_api_url');
         $this->visionModel = config('image-prompt.grok.vision_model');
-        $this->imagineApiUrl = config('image-prompt.grok.imagine_api_url');
+        $this->imagineApiUrl = $this->getSettingOrConfig('grok_imagine_api_url', 'image-prompt.grok.imagine_api_url');
         $this->imagineModel = config('image-prompt.grok.imagine_model');
         $this->imagineSize = config('image-prompt.grok.imagine_size', '1024x1024');
         $this->imagineQuality = config('image-prompt.grok.imagine_quality', 'high');
-        $this->videoApiUrl = config('image-prompt.grok.video_api_url', 'https://api.x.ai/v1/videos/generations');
+        $this->videoApiUrl = $this->getSettingOrConfig('grok_video_api_url', 'image-prompt.grok.video_api_url');
         $this->videoModel = config('image-prompt.grok.video_model', 'grok-imagine-video');
         $this->maxTokens = config('image-prompt.grok.max_tokens', 2000);
-        $this->timeout = config('image-prompt.grok.timeout', 180);
+        $this->timeout = (int) $this->getSettingOrConfig('grok_timeout', 'image-prompt.grok.timeout', 180);
+    }
+
+    /**
+     * Get API key with priority: Database > Config
+     */
+    protected function getApiKey()
+    {
+        try {
+            // Try database first
+            $dbKey = \App\Models\Setting::get('grok_api_key');
+            if ($dbKey && !empty($dbKey) && $dbKey !== 'your_openai_api_key_here') {
+                Log::info('GrokImageService: Using API key from database settings');
+                return $dbKey;
+            }
+        } catch (\Exception $e) {
+            Log::warning('GrokImageService: Could not retrieve API key from database', [
+                'error' => $e->getMessage()
+            ]);
+        }
+        
+        // Fall back to config (which may have env or default)
+        $configKey = config('image-prompt.grok.api_key');
+        if ($configKey && !empty($configKey) && $configKey !== 'your_openai_api_key_here') {
+            Log::info('GrokImageService: Using API key from config/env');
+            return $configKey;
+        }
+        
+        Log::error('GrokImageService: No valid API key found in database or config');
+        return '';
+    }
+
+    /**
+     * Get setting from database or config with fallback
+     */
+    protected function getSettingOrConfig($settingKey, $configKey, $default = null)
+    {
+        try {
+            // Try database first
+            $dbValue = \App\Models\Setting::get($settingKey);
+            if ($dbValue && !empty($dbValue)) {
+                return $dbValue;
+            }
+        } catch (\Exception $e) {
+            // Database not available, fall through to config
+        }
+        
+        // Fall back to config
+        return config($configKey, $default);
     }
 
     /**
@@ -80,7 +129,11 @@ class GrokImageService
             ]);
 
             if (empty($this->apiKey)) {
-                throw new \Exception('Grok API key is not configured');
+                throw new \Exception('Grok API key is not configured. Please set it in Admin Settings.');
+            }
+            
+            if ($this->apiKey === 'your_openai_api_key_here') {
+                throw new \Exception('Grok API key is still set to placeholder value. Please update it in Admin Settings with your actual API key from https://console.x.ai/');
             }
 
             $payload = [
@@ -92,7 +145,9 @@ class GrokImageService
 
             Log::info('Grok Imagine: Sending request', [
                 'url' => $this->imagineApiUrl,
-                'payload' => $payload
+                'payload' => $payload,
+                'api_key_prefix' => substr($this->apiKey, 0, 8) . '...',
+                'api_key_length' => strlen($this->apiKey)
             ]);
 
             $response = Http::timeout($this->timeout)
@@ -191,7 +246,11 @@ class GrokImageService
             }
 
             if (empty($this->apiKey)) {
-                throw new \Exception('Grok API key is not configured');
+                throw new \Exception('Grok API key is not configured. Please set it in Admin Settings.');
+            }
+            
+            if ($this->apiKey === 'your_openai_api_key_here') {
+                throw new \Exception('Grok API key is still set to placeholder value. Please update it in Admin Settings with your actual API key from https://console.x.ai/');
             }
 
             // Read the image file and convert to base64
@@ -488,7 +547,11 @@ class GrokImageService
             }
 
             if (empty($this->apiKey)) {
-                throw new \Exception('Grok API key is not configured');
+                throw new \Exception('Grok API key is not configured. Please set it in Admin Settings.');
+            }
+            
+            if ($this->apiKey === 'your_openai_api_key_here') {
+                throw new \Exception('Grok API key is still set to placeholder value. Please update it in Admin Settings with your actual API key from https://console.x.ai/');
             }
 
             // Check if video generation is requested in the prompt
@@ -623,7 +686,11 @@ class GrokImageService
             }
 
             if (empty($this->apiKey)) {
-                throw new \Exception('Grok API key is not configured');
+                throw new \Exception('Grok API key is not configured. Please set it in Admin Settings.');
+            }
+            
+            if ($this->apiKey === 'your_openai_api_key_here') {
+                throw new \Exception('Grok API key is still set to placeholder value. Please update it in Admin Settings with your actual API key from https://console.x.ai/');
             }
 
             // Read and encode the image

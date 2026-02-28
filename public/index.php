@@ -5,6 +5,10 @@ use Illuminate\Http\Request;
 
 define('LARAVEL_START', microtime(true));
 
+// Force correct environment variables from .env file
+// This overrides system environment variables that may be set by Apache/XAMPP
+require __DIR__.'/../bootstrap/force_env.php';
+
 // Determine if the application is in maintenance mode...
 if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
     require $maintenance;

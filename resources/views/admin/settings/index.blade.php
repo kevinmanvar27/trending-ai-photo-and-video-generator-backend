@@ -45,6 +45,10 @@
                     class="tab-button border-b-2 border-transparent py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                     <i class="fas fa-credit-card mr-2"></i>Payment Settings
                 </button>
+                <button type="button" onclick="showTab('api')" id="tab-api"
+                    class="tab-button border-b-2 border-transparent py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="fas fa-key mr-2"></i>API Settings
+                </button>
             </nav>
         </div>
 
@@ -292,6 +296,123 @@
             </div>
         </div>
 
+        <!-- API Settings Tab -->
+        <div id="content-api" class="tab-content hidden">
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-robot mr-2"></i>Grok AI API Configuration
+                </h2>
+
+                <div class="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                Get your Grok API key from 
+                                <a href="https://console.x.ai/" target="_blank" class="font-semibold underline">
+                                    xAI Console
+                                </a>. 
+                                Grok is used for intelligent image analysis, transformation, and generation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Grok API Key
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        <input type="password" name="grok_api_key" id="grok_api_key"
+                            value="{{ old('grok_api_key', $settings->get('grok_api_key')->value ?? '') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono pr-10"
+                            placeholder="xai-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+                        <button type="button" onclick="togglePassword('grok_api_key')" 
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-eye" id="grok_api_key-icon"></i>
+                        </button>
+                    </div>
+                    <p class="text-gray-500 text-xs mt-1">Your Grok API key (starts with xai-)</p>
+                    
+                    <!-- Test API Key Button -->
+                    <div class="mt-2">
+                        <button type="button" onclick="testApiKey()" id="test-api-key-btn"
+                            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm inline-flex items-center">
+                            <i class="fas fa-vial mr-2"></i>
+                            Test API Key
+                        </button>
+                        <div id="api-test-result" class="mt-2 hidden"></div>
+                    </div>
+                </div>
+
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mt-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                <strong>Important:</strong> Keep your Grok API key secure. Never share it publicly or commit it to version control. This key is required for all image processing features.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-cog mr-2"></i>Advanced API Settings
+                </h2>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Vision API URL
+                    </label>
+                    <input type="text" name="grok_vision_api_url" 
+                        value="{{ old('grok_vision_api_url', $settings->get('grok_vision_api_url')->value ?? 'https://api.x.ai/v1/chat/completions') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono"
+                        placeholder="https://api.x.ai/v1/chat/completions">
+                    <p class="text-gray-500 text-xs mt-1">Grok Vision API endpoint for image analysis</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Imagine API URL
+                    </label>
+                    <input type="text" name="grok_imagine_api_url" 
+                        value="{{ old('grok_imagine_api_url', $settings->get('grok_imagine_api_url')->value ?? 'https://api.x.ai/v1/images/generations') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono"
+                        placeholder="https://api.x.ai/v1/images/generations">
+                    <p class="text-gray-500 text-xs mt-1">Grok Imagine API endpoint for image generation</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Video API URL
+                    </label>
+                    <input type="text" name="grok_video_api_url" 
+                        value="{{ old('grok_video_api_url', $settings->get('grok_video_api_url')->value ?? 'https://api.x.ai/v1/videos/generations') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono"
+                        placeholder="https://api.x.ai/v1/videos/generations">
+                    <p class="text-gray-500 text-xs mt-1">Grok Video API endpoint for video generation</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        API Timeout (seconds)
+                    </label>
+                    <input type="number" name="grok_timeout" 
+                        value="{{ old('grok_timeout', $settings->get('grok_timeout')->value ?? '180') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="180" min="30" max="600">
+                    <p class="text-gray-500 text-xs mt-1">Maximum time to wait for API responses (30-600 seconds)</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Save Button -->
         <div class="flex justify-end">
             <button type="submit" 
@@ -366,5 +487,51 @@ function deleteFile(key) {
         alert('Failed to delete file');
     });
 }
+
+// Test API Key
+function testApiKey() {
+    const apiKey = document.getElementById('grok_api_key').value;
+    const btn = document.getElementById('test-api-key-btn');
+    const resultDiv = document.getElementById('api-test-result');
+    
+    if (!apiKey) {
+        resultDiv.innerHTML = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><i class="fas fa-times-circle mr-2"></i>Please enter an API key first</div>';
+        resultDiv.classList.remove('hidden');
+        return;
+    }
+    
+    // Show loading state
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Testing...';
+    resultDiv.innerHTML = '<div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded"><i class="fas fa-spinner fa-spin mr-2"></i>Testing API key connection...</div>';
+    resultDiv.classList.remove('hidden');
+    
+    fetch('{{ route("admin.settings.test-api-key") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({ api_key: apiKey })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            resultDiv.innerHTML = '<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"><i class="fas fa-check-circle mr-2"></i>' + data.message + '</div>';
+        } else {
+            resultDiv.innerHTML = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><i class="fas fa-times-circle mr-2"></i>' + data.message + '</div>';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        resultDiv.innerHTML = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><i class="fas fa-times-circle mr-2"></i>Error testing API key: ' + error.message + '</div>';
+    })
+    .finally(() => {
+        // Reset button state
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-vial mr-2"></i>Test API Key';
+    });
+}
+
 </script>
 @endsection
