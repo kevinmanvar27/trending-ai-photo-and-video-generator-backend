@@ -29,12 +29,21 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
 
-            // Check if user is suspended
-            if (Auth::user()->isSuspended()) {
+            // Get user instance before any logout
+            $user = Auth::user();
+            
+            // Check if user exists and is suspended
+            if ($user && $user->isSuspended()) {
+                // Store suspension reason before logout
+                $suspensionReason = $user->suspension_reason ?? 'No reason provided';
+                
                 Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                
                 return back()->withErrors([
-                    'email' => 'Your account has been suspended. Reason: ' . Auth::user()->suspension_reason,
-                ]);
+                    'email' => 'Your account has been suspended. Reason: ' . $suspensionReason,
+                ])->onlyInput('email');
             }
 
             return redirect()->intended(route('home'));

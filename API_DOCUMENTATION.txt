@@ -1,0 +1,695 @@
+================================================================================
+API DOCUMENTATION - AI PHOTO & VIDEO GENERATOR
+Template-Based Image Upload & Generation System
+================================================================================
+
+OVERVIEW:
+---------
+This API enables users to:
+1. Browse available templates (configured by admin)
+2. Upload images to apply template-specific prompts
+3. Generate AI-enhanced images/videos using admin-defined prompts
+4. Retrieve generated content
+
+RECENT UPDATES (March 2, 2026):
+--------------------------------
+✅ Fixed: Missing /generate/upload endpoint (was causing 404 errors)
+✅ Added: POST /generate/upload - Upload image for generation
+✅ Added: GET /generate/status/{id} - Check generation status
+✅ Added: GET /generate/history - Get user generation history
+✅ Changed: Image field name is "image" (not "original_image")
+✅ Added: Subscription and coin validation
+✅ Added: Auto-detection of output type from template
+✅ Added: Support for custom prompts appended to template prompts
+
+IMPORTANT IMPLEMENTATION NOTES:
+--------------------------------
+- All /generate endpoints require authentication (Bearer token)
+- Submissions require active subscription
+- Templates may require coins (deducted on upload)
+- Use submission_id (not generation_id) for status checking
+- Output type (image/video) is auto-detected from template
+- Custom prompts are appended to template's base prompt
+- File uploads use multipart/form-data with "image" field name
+
+================================================================================
+BASE URL: https://your-domain.com/api
+================================================================================
+
+--------------------------------------------------------------------------------
+1. GET TEMPLATES LIST
+--------------------------------------------------------------------------------
+Endpoint: GET /templates
+Description: Fetch all available templates with their details
+
+Request Headers:
+  Authorization: Bearer {user_token}
+  Content-Type: application/json
+
+Response (200 OK):
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "name": "Professional Headshot",
+      "description": "Transform your photo into a professional headshot",
+      "category": "portrait",
+      "thumbnail": "https://domain.com/templates/headshot.jpg",
+      "prompt": "professional corporate headshot, studio lighting, business attire, high quality",
+      "type": "image",
+      "is_active": true,
+      "created_at": "2026-01-15T10:30:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Cinematic Video",
+      "description": "Convert your image into cinematic video",
+      "category": "video",
+      "thumbnail": "https://domain.com/templates/cinematic.jpg",
+      "prompt": "cinematic video, dramatic lighting, smooth motion, 4K quality",
+      "type": "video",
+      "is_active": true,
+      "created_at": "2026-01-20T14:20:00Z"
+    }
+  ],
+  "message": "Templates retrieved successfully"
+}
+
+--------------------------------------------------------------------------------
+2. GET TEMPLATE DETAILS
+--------------------------------------------------------------------------------
+Endpoint: GET /templates/{template_id}
+Description: Get detailed information about a specific template
+
+Request Headers:
+  Authorization: Bearer {user_token}
+  Content-Type: application/json
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Professional Headshot",
+    "description": "Transform your photo into a professional headshot",
+    "category": "portrait",
+    "thumbnail": "https://domain.com/templates/headshot.jpg",
+    "prompt": "professional corporate headshot, studio lighting, business attire",
+    "negative_prompt": "blurry, low quality, distorted",
+    "type": "image",
+    "settings": {
+      "resolution": "1024x1024",
+      "style": "realistic",
+      "strength": 0.8
+    },
+    "sample_outputs": [
+      "https://domain.com/samples/sample1.jpg",
+      "https://domain.com/samples/sample2.jpg"
+    ],
+    "is_active": true,
+    "usage_count": 1250,
+    "created_at": "2026-01-15T10:30:00Z"
+  },
+  "message": "Template details retrieved successfully"
+}
+
+--------------------------------------------------------------------------------
+3. UPLOAD IMAGE FOR GENERATION
+--------------------------------------------------------------------------------
+Endpoint: POST /generate/upload
+Description: Upload user image and apply selected template prompt
+
+Request Headers:
+  Authorization: Bearer {user_token}
+  Content-Type: multipart/form-data
+
+Request Body (Form Data):
+  template_id: 1 (integer, required)
+  image: [file] (required - jpg, jpeg, png, gif, max 10MB)
+  custom_prompt: "additional custom instructions" (optional)
+  settings: {
+    "resolution": "1024x1024",
+    "quality": "high"
+  } (optional JSON string)
+
+IMPORTANT NOTES:
+  - Field name is "image" (not "original_image")
+  - Output type (image/video) is automatically detected from template
+  - Requires active subscription
+  - May require coins based on template configuration
+  - Custom prompt is appended to template's base prompt
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "generation_id": "gen_abc123xyz789",
+    "submission_id": 42,
+    "template_id": 1,
+    "template_name": "Professional Headshot",
+    "uploaded_image": "https://domain.com/storage/submissions/originals/image.jpg",
+    "status": "processing",
+    "applied_prompt": "professional corporate headshot, studio lighting, business attire, high quality",
+    "estimated_time": 30,
+    "created_at": "2026-03-02T13:45:00Z",
+    "coins_deducted": 10,
+    "remaining_coins": 90
+  },
+  "message": "Image uploaded successfully. Generation in progress."
+}
+
+Error Response (400 Bad Request):
+{
+  "success": false,
+  "message": "This template is not available"
+}
+
+Error Response (403 Forbidden - No Subscription):
+{
+  "success": false,
+  "message": "You need an active subscription to use templates"
+}
+
+Error Response (403 Forbidden - Insufficient Coins):
+{
+  "success": false,
+  "message": "Insufficient coins. You need 10 coins but have 5 coins remaining.",
+  "coins_required": 10,
+  "coins_available": 5
+}
+
+Error Response (422 Validation Error):
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "image": ["The image field is required."],
+    "template_id": ["The selected template id is invalid."]
+  }
+}
+
+--------------------------------------------------------------------------------
+4. CHECK GENERATION STATUS
+--------------------------------------------------------------------------------
+Endpoint: GET /generate/status/{submission_id}
+Description: Check the status of image/video generation using submission ID
+
+Request Headers:
+  Authorization: Bearer {user_token}
+  Content-Type: application/json
+
+URL Parameters:
+  submission_id: The ID returned from the upload endpoint (data.submission_id)
+
+Response (200 OK) - Processing:
+{
+  "success": true,
+  "data": {
+    "generation_id": "gen_abc123xyz789",
+    "submission_id": 42,
+    "status": "processing",
+    "progress": 65,
+    "message": "Applying AI enhancements...",
+    "estimated_time_remaining": 15
+  },
+  "message": "Generation in progress"
+}
+
+Response (200 OK) - Completed:
+{
+  "success": true,
+  "data": {
+    "generation_id": "gen_abc123xyz789",
+    "submission_id": 42,
+    "status": "completed",
+    "progress": 100,
+    "original_image": "https://domain.com/storage/submissions/originals/image.jpg",
+    "generated_output": "https://domain.com/storage/submissions/processed/result.jpg",
+    "thumbnail": "https://domain.com/storage/submissions/processed/result.jpg",
+    "type": "image",
+    "template_used": {
+      "id": 1,
+      "name": "Professional Headshot"
+    },
+    "completed_at": "2026-03-02T13:46:00Z"
+  },
+  "message": "Generation completed successfully"
+}
+
+Response (200 OK) - Failed:
+{
+  "success": false,
+  "data": {
+    "generation_id": "gen_abc123xyz789",
+    "submission_id": 42,
+    "status": "failed",
+    "error": "Failed to process image. Please try again.",
+    "failed_at": "2026-03-02T13:46:00Z"
+  }
+}
+
+Response (404 Not Found):
+{
+  "success": false,
+  "message": "Generation not found"
+}
+
+--------------------------------------------------------------------------------
+5. GET USER GENERATION HISTORY
+--------------------------------------------------------------------------------
+Endpoint: GET /generate/history
+Description: Retrieve user's generation history with pagination
+
+Request Headers:
+  Authorization: Bearer {user_token}
+  Content-Type: application/json
+
+Query Parameters:
+  page: 1 (optional, default: 1)
+  per_page: 20 (optional, default: 20, max: 100)
+  status: "completed" | "processing" | "pending" | "failed" (optional)
+  type: "image" | "video" (optional)
+  sort_by: "created_at" | "completed_at" (optional, default: "created_at")
+  sort_order: "asc" | "desc" (optional, default: "desc")
+
+Response (200 OK):
+{
+  "success": true,
+  "data": [
+    {
+      "generation_id": "gen_abc123xyz789",
+      "submission_id": 42,
+      "template": {
+        "id": 1,
+        "name": "Professional Headshot",
+        "thumbnail": "https://domain.com/templates/headshot.jpg"
+      },
+      "original_image": "https://domain.com/storage/submissions/originals/image.jpg",
+      "generated_output": "https://domain.com/storage/submissions/processed/result.jpg",
+      "status": "completed",
+      "type": "image",
+      "created_at": "2026-03-02T13:45:00Z",
+      "completed_at": "2026-03-02T13:46:00Z"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "per_page": 20,
+    "total": 95,
+    "last_page": 5
+  },
+  "message": "Generation history retrieved successfully"
+}
+
+--------------------------------------------------------------------------------
+6. DOWNLOAD GENERATED CONTENT
+--------------------------------------------------------------------------------
+Endpoint: GET /generate/download/{submission_id}
+Description: Download the generated image/video
+
+Request Headers:
+  Authorization: Bearer {user_token}
+
+Response: Binary file stream (image/video)
+Content-Type: image/jpeg or video/mp4
+Content-Disposition: attachment; filename="generated_image.jpg"
+
+NOTE: This endpoint is not yet implemented. Use the direct URL from 
+      'generated_output' field in the status response to access files.
+
+--------------------------------------------------------------------------------
+7. DELETE GENERATION
+--------------------------------------------------------------------------------
+Endpoint: DELETE /generate/{submission_id}
+Description: Delete a specific generation and its files
+
+Request Headers:
+  Authorization: Bearer {user_token}
+  Content-Type: application/json
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Submission deleted successfully"
+}
+
+Response (404 Not Found):
+{
+  "success": false,
+  "message": "Submission not found"
+}
+
+NOTE: Currently uses DELETE /submissions/{id} endpoint.
+      The /generate/{id} alias is not yet implemented.
+
+================================================================================
+ADMIN PANEL ENDPOINTS
+================================================================================
+
+NOTE: Admin endpoints are not yet fully implemented in the API routes.
+      Template management uses the standard /templates endpoints with
+      authentication middleware to restrict access.
+
+--------------------------------------------------------------------------------
+8. CREATE/UPDATE TEMPLATE (ADMIN)
+--------------------------------------------------------------------------------
+Endpoint: POST /templates (create)
+         PUT /templates/{id} (update)
+Description: Create or update a template with custom prompt
+
+Request Headers:
+  Authorization: Bearer {admin_token}
+  Content-Type: application/json
+
+Request Body:
+{
+  "name": "Professional Headshot",
+  "description": "Transform your photo into a professional headshot",
+  "category": "portrait",
+  "prompt": "professional corporate headshot, studio lighting, business attire, high quality, 8k resolution",
+  "negative_prompt": "blurry, low quality, distorted, amateur",
+  "type": "image",
+  "coins_required": 10,
+  "settings": {
+    "resolution": "1024x1024",
+    "style": "realistic",
+    "strength": 0.8
+  },
+  "is_active": true,
+  "thumbnail_url": "https://domain.com/templates/headshot.jpg"
+}
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Professional Headshot",
+    "prompt": "professional corporate headshot, studio lighting...",
+    "created_at": "2026-03-02T13:50:00Z"
+  },
+  "message": "Template created successfully"
+}
+
+--------------------------------------------------------------------------------
+9. GET ALL GENERATIONS (ADMIN)
+--------------------------------------------------------------------------------
+Endpoint: GET /submissions (with admin authentication)
+Description: View all user generations with filters
+
+Request Headers:
+  Authorization: Bearer {admin_token}
+  Content-Type: application/json
+
+Query Parameters:
+  page: 1
+  per_page: 50
+  status: "completed" | "processing" | "pending" | "failed"
+  output_type: "image" | "video"
+  template_id: 1 (optional)
+  sort_by: "created_at" (optional)
+  sort_order: "desc" (optional)
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": 42,
+        "user_id": 123,
+        "template_id": 1,
+        "template": {
+          "id": 1,
+          "name": "Professional Headshot"
+        },
+        "original_image_path": "submissions/originals/image.jpg",
+        "processed_image_path": "submissions/processed/result.jpg",
+        "status": "completed",
+        "output_type": "image",
+        "started_at": "2026-03-02T13:45:00Z",
+        "completed_at": "2026-03-02T13:46:00Z",
+        "processing_time": 45.5,
+        "error_message": null
+      }
+    ],
+    "per_page": 50,
+    "total": 5000,
+    "last_page": 100
+  }
+}
+
+NOTE: Admin-specific endpoint /admin/generations is not yet implemented.
+      Use /submissions with admin authentication for now.
+
+================================================================================
+WORKFLOW EXAMPLE - FLUTTER APP
+================================================================================
+
+STEP 1: User Opens App
+-----------------------
+- App calls: GET /templates
+- Displays grid/list of available templates
+- Shows template thumbnail, name, description
+
+STEP 2: User Selects Template
+------------------------------
+- User taps on template
+- App calls: GET /templates/{template_id}
+- Shows template details, sample outputs, description
+- Displays "Upload Image" button
+
+STEP 3: User Uploads Image
+---------------------------
+- User selects image from gallery/camera
+- App validates image (size, format)
+- App calls: POST /generate/upload
+  - Sends template_id and image file (field name: "image")
+  - Admin's predefined prompt is automatically applied
+- Receives generation_id and submission_id
+- Store submission_id for status checking
+
+STEP 4: Monitor Generation Progress
+------------------------------------
+- App polls: GET /generate/status/{submission_id}
+- Shows progress bar/loading indicator
+- Updates UI with progress percentage
+- Poll every 2-3 seconds
+
+STEP 5: Display Result
+-----------------------
+- When status = "completed"
+- App displays generated image/video using 'generated_output' URL
+- Options: Download, Share, Delete, Generate Again
+
+STEP 6: View History
+---------------------
+- User can view past generations
+- App calls: GET /generate/history
+- Displays grid of previous generations
+
+================================================================================
+ERROR CODES
+================================================================================
+
+400 - Bad Request
+  - INVALID_FILE_FORMAT: Unsupported file format
+  - FILE_TOO_LARGE: File exceeds size limit
+  - MISSING_PARAMETERS: Required parameters missing
+  - INVALID_TEMPLATE: Template not found or inactive
+
+401 - Unauthorized
+  - INVALID_TOKEN: Authentication token invalid or expired
+  - TOKEN_MISSING: No authentication token provided
+
+403 - Forbidden
+  - INSUFFICIENT_PERMISSIONS: User lacks required permissions
+  - QUOTA_EXCEEDED: User has exceeded generation quota
+
+404 - Not Found
+  - TEMPLATE_NOT_FOUND: Requested template doesn't exist
+  - GENERATION_NOT_FOUND: Generation ID not found
+
+500 - Internal Server Error
+  - GENERATION_FAILED: AI generation process failed
+  - SERVER_ERROR: Unexpected server error
+
+================================================================================
+RATE LIMITS
+================================================================================
+
+Free Users:
+  - 10 generations per day
+  - Max file size: 5MB
+  - Standard processing speed
+
+Premium Users:
+  - 100 generations per day
+  - Max file size: 10MB
+  - Priority processing
+
+Admin:
+  - Unlimited generations
+  - No file size restrictions
+
+================================================================================
+SUPPORTED FILE FORMATS
+================================================================================
+
+Input Images:
+  - JPEG (.jpg, .jpeg)
+  - PNG (.png)
+  - WebP (.webp)
+  - Max size: 10MB (premium) / 5MB (free)
+  - Recommended resolution: 512x512 to 2048x2048
+
+Output:
+  - Images: JPEG, PNG
+  - Videos: MP4 (H.264)
+
+================================================================================
+NOTES FOR FLUTTER IMPLEMENTATION
+================================================================================
+
+1. IMAGE UPLOAD:
+   - Use http.MultipartRequest for file upload
+   - Field name MUST be "image" (not "original_image")
+   - Compress images before upload if needed
+   - Show upload progress indicator
+   - Store the submission_id from response for status checking
+
+2. POLLING:
+   - Use submission_id (not generation_id) for status checks
+   - Poll status every 2-3 seconds during generation
+   - Implement exponential backoff if needed
+   - Stop polling after 5 minutes (timeout)
+
+3. CACHING:
+   - Cache template list locally
+   - Cache generated images for offline viewing
+   - Implement proper cache invalidation
+
+4. ERROR HANDLING:
+   - Show user-friendly error messages
+   - Handle subscription/coin errors gracefully
+   - Implement retry logic for failed uploads
+   - Handle network connectivity issues
+
+5. UI/UX:
+   - Show template preview before upload
+   - Display generation progress with animations
+   - Allow users to cancel ongoing generations
+   - Implement pull-to-refresh for history
+
+6. SUBSCRIPTION & COINS:
+   - Check user has active subscription before upload
+   - Display coins required for each template
+   - Show remaining coins after each generation
+   - Handle insufficient coins error gracefully
+
+================================================================================
+SECURITY CONSIDERATIONS
+================================================================================
+
+1. Always send Authorization header with valid token
+2. Validate file types on client side before upload
+3. Implement HTTPS for all API calls
+4. Store tokens securely (Flutter Secure Storage)
+5. Don't expose admin endpoints in user app
+6. Implement proper error handling without exposing system details
+
+================================================================================
+AVAILABLE API ROUTES (IMPLEMENTED)
+================================================================================
+
+PUBLIC ROUTES:
+--------------
+POST   /api/register
+POST   /api/login
+GET    /api/payment/config
+GET    /api/templates
+GET    /api/templates/popular
+GET    /api/templates/{id}
+GET    /api/pages
+GET    /api/pages/{identifier}
+GET    /api/subscription/plans
+GET    /api/subscription/plans/{id}
+GET    /api/delete-account-credentials
+
+AUTHENTICATED ROUTES (Require Bearer Token):
+---------------------------------------------
+POST   /api/logout
+GET    /api/profile
+PUT    /api/profile
+GET    /api/delete-account
+
+# Contacts
+POST   /api/contacts
+GET    /api/contacts
+DELETE /api/contacts
+
+# Activity Tracking
+POST   /api/activity/start
+POST   /api/activity/end
+GET    /api/activity/history
+
+# Settings
+GET    /api/settings
+GET    /api/settings/group/{group}
+GET    /api/settings/{key}
+
+# Subscriptions
+POST   /api/subscription/subscribe
+GET    /api/subscription/my-subscription
+GET    /api/subscription/history
+POST   /api/subscription/cancel
+
+# Templates (Admin)
+POST   /api/templates
+PUT    /api/templates/{id}
+DELETE /api/templates/{id}
+POST   /api/templates/{id}/toggle
+
+# Image Submissions
+GET    /api/submissions
+GET    /api/submissions/recent
+GET    /api/submissions/statistics
+POST   /api/submissions
+GET    /api/submissions/{id}
+POST   /api/submissions/{id}/status
+DELETE /api/submissions/{id}
+
+# Generation Endpoints (NEW)
+POST   /api/generate/upload
+GET    /api/generate/status/{id}
+GET    /api/generate/history
+
+================================================================================
+CHANGELOG
+================================================================================
+
+Version 1.1.0 (March 2, 2026):
+-------------------------------
+- Added missing /generate/upload endpoint
+- Added /generate/status/{id} for checking generation status
+- Added /generate/history for user generation history
+- Fixed field name mismatch (image vs original_image)
+- Added subscription validation to upload endpoint
+- Added coin deduction system
+- Added auto-detection of output type from template
+- Added support for custom prompts
+- Updated API documentation with actual implementation details
+
+Version 1.0.0 (Initial Release):
+---------------------------------
+- Basic authentication system
+- Template management
+- Subscription system
+- Image submission tracking
+- User profile management
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================

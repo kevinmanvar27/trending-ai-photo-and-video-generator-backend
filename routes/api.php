@@ -88,4 +88,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/submissions/{id}', [ImageSubmissionController::class, 'show']);
     Route::post('/submissions/{id}/status', [ImageSubmissionController::class, 'updateStatus']);
     Route::delete('/submissions/{id}', [ImageSubmissionController::class, 'destroy']);
+    
+    // Generate/Upload endpoints (as per API documentation)
+    Route::post('/generate/upload', [ImageSubmissionController::class, 'upload']);
+    Route::get('/generate/status/{id}', [ImageSubmissionController::class, 'checkStatus']);
+    Route::get('/generate/history', [ImageSubmissionController::class, 'history']);
 });

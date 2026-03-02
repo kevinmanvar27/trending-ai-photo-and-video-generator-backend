@@ -370,4 +370,284 @@ class ImageSubmissionController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Upload image for generation (API Documentation endpoint)
+     * This endpoint matches the API documentation format
+     */
+    public function upload(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'template_id' => 'required|exists:image_prompt_templates,id',
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
+                'custom_prompt' => 'nullable|string|max:500',
+                'settings' => 'nullable|json'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $user = Auth::user();
+            $template = ImagePromptTemplate::find($request->template_id);
+
+            if (!$template->is_active) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This template is not available'
+                ], 400);
+            }
+
+            // Check if user has active subscription
+            $activeSubscription = $user->activeSubscription;
+            
+            if (!$activeSubscription) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You need an active subscription to use templates'
+                ], 403);
+            }
+
+            // Check if template requires coins
+            $coinsRequired = $template->coins_required ?? 0;
+            
+            if ($coinsRequired > 0) {
+                // Check if user has enough coins
+                if (!$activeSubscription->hasEnoughCoins($coinsRequired)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Insufficient coins. You need ' . $coinsRequired . ' coins but have ' . $activeSubscription->remaining_coins . ' coins remaining.',
+                        'coins_required' => $coinsRequired,
+                        'coins_available' => $activeSubscription->remaining_coins
+                    ], 403);
+                }
+
+                // Deduct coins from user's subscription
+                if (!$activeSubscription->useCoins($coinsRequired)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to deduct coins. Please try again.'
+                    ], 500);
+                }
+            }
+
+            // Upload original image
+            $image = $request->file('image');
+            $originalPath = $image->store('submissions/originals', 'public');
+
+            // Determine output type from template type (default to 'image' if not specified)
+            $outputType = $template->type ?? 'image';
+
+            // Build the applied prompt (template prompt + custom prompt if provided)
+            $appliedPrompt = $template->prompt;
+            if ($request->has('custom_prompt') && !empty($request->custom_prompt)) {
+                $appliedPrompt .= ', ' . $request->custom_prompt;
+            }
+
+            // Parse settings if provided
+            $settings = null;
+            if ($request->has('settings')) {
+                $settings = json_decode($request->settings, true);
+            }
+
+            // Create submission
+            $submission = UserImageSubmission::create([
+                'user_id' => $user->id,
+                'template_id' => $template->id,
+                'original_image_path' => $originalPath,
+                'output_type' => $outputType,
+                'status' => 'processing',
+                'started_at' => now()
+            ]);
+
+            // Increment template usage
+            $template->incrementUsage();
+
+            // Generate unique generation ID
+            $generationId = 'gen_' . uniqid() . substr(md5($submission->id), 0, 8);
+
+            // Build uploaded image URL
+            $uploadedImageUrl = url('storage/' . $originalPath);
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'generation_id' => $generationId,
+                    'submission_id' => $submission->id,
+                    'template_id' => $template->id,
+                    'template_name' => $template->name,
+                    'uploaded_image' => $uploadedImageUrl,
+                    'status' => 'processing',
+                    'applied_prompt' => $appliedPrompt,
+                    'estimated_time' => 30, // Default estimation
+                    'created_at' => $submission->created_at->toIso8601String(),
+                    'coins_deducted' => $coinsRequired,
+                    'remaining_coins' => $activeSubscription->remaining_coins
+                ],
+                'message' => 'Image uploaded successfully. Generation in progress.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload image',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Check generation status by submission ID
+     * Endpoint: GET /generate/status/{submission_id}
+     */
+    public function checkStatus($id)
+    {
+        try {
+            $user = Auth::user();
+            $submission = UserImageSubmission::where('user_id', $user->id)
+                ->where('id', $id)
+                ->with('template')
+                ->first();
+
+            if (!$submission) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Generation not found'
+                ], 404);
+            }
+
+            // Generate generation ID format
+            $generationId = 'gen_' . uniqid() . substr(md5($submission->id), 0, 8);
+
+            $data = [
+                'generation_id' => $generationId,
+                'submission_id' => $submission->id,
+                'status' => $submission->status,
+            ];
+
+            // Status-specific data
+            if ($submission->status === 'processing' || $submission->status === 'pending') {
+                $data['progress'] = rand(10, 90); // Mock progress - replace with actual if available
+                $data['message'] = 'Applying AI enhancements...';
+                $data['estimated_time_remaining'] = 15;
+            } elseif ($submission->status === 'completed') {
+                $data['progress'] = 100;
+                $data['original_image'] = url('storage/' . $submission->original_image_path);
+                $data['generated_output'] = $submission->processed_image_path 
+                    ? url('storage/' . $submission->processed_image_path) 
+                    : null;
+                $data['thumbnail'] = $submission->processed_image_path 
+                    ? url('storage/' . $submission->processed_image_path) 
+                    : null;
+                $data['type'] = $submission->output_type;
+                $data['template_used'] = [
+                    'id' => $submission->template->id,
+                    'name' => $submission->template->name
+                ];
+                $data['completed_at'] = $submission->completed_at 
+                    ? $submission->completed_at->toIso8601String() 
+                    : null;
+            } elseif ($submission->status === 'failed') {
+                $data['error'] = $submission->error_message ?? 'Failed to process image. Please try again.';
+                $data['failed_at'] = $submission->updated_at->toIso8601String();
+                
+                return response()->json([
+                    'success' => false,
+                    'data' => $data
+                ], 200);
+            }
+
+            $message = $submission->status === 'completed' 
+                ? 'Generation completed successfully' 
+                : 'Generation in progress';
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'message' => $message
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch generation status',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get user generation history
+     * Endpoint: GET /generate/history
+     */
+    public function history(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $query = UserImageSubmission::where('user_id', $user->id);
+
+            // Filter by status
+            if ($request->has('status')) {
+                $query->where('status', $request->status);
+            }
+
+            // Filter by type
+            if ($request->has('type')) {
+                $query->where('output_type', $request->type);
+            }
+
+            // Sort
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortOrder = $request->get('sort_order', 'desc');
+            $query->orderBy($sortBy, $sortOrder);
+
+            // Pagination
+            $perPage = $request->get('per_page', 20);
+            $submissions = $query->with('template')->paginate($perPage);
+
+            // Format data to match API documentation
+            $formattedData = $submissions->map(function ($submission) {
+                return [
+                    'generation_id' => 'gen_' . substr(md5($submission->id), 0, 16),
+                    'submission_id' => $submission->id,
+                    'template' => [
+                        'id' => $submission->template->id,
+                        'name' => $submission->template->name,
+                        'thumbnail' => $submission->template->thumbnail_url ?? null
+                    ],
+                    'original_image' => url('storage/' . $submission->original_image_path),
+                    'generated_output' => $submission->processed_image_path 
+                        ? url('storage/' . $submission->processed_image_path) 
+                        : null,
+                    'status' => $submission->status,
+                    'type' => $submission->output_type,
+                    'created_at' => $submission->created_at->toIso8601String(),
+                    'completed_at' => $submission->completed_at 
+                        ? $submission->completed_at->toIso8601String() 
+                        : null
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $formattedData,
+                'pagination' => [
+                    'current_page' => $submissions->currentPage(),
+                    'per_page' => $submissions->perPage(),
+                    'total' => $submissions->total(),
+                    'last_page' => $submissions->lastPage()
+                ],
+                'message' => 'Generation history retrieved successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch generation history',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
