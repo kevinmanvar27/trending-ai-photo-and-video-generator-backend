@@ -105,4 +105,60 @@ class AuthController extends Controller
             'data' => $user,
         ]);
     }
+
+    /**
+     * Update user profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        // Build validation rules
+        $rules = [
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
+        ];
+
+        // Validate the request
+        $request->validate($rules);
+
+        try {
+            // Update name if provided
+            if ($request->has('name') && $request->name !== null) {
+                $user->name = $request->name;
+            }
+
+            // Update email if provided
+            if ($request->has('email') && $request->email !== null) {
+                $user->email = $request->email;
+            }
+
+            // Update password if provided
+            if ($request->has('password') && $request->password !== null) {
+                $user->password = Hash::make($request->password);
+            }
+
+            // Save the user
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Profile updated successfully',
+                'data' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update profile',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

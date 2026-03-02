@@ -17,10 +17,12 @@ class ImagePromptTemplate extends Model
         'prompt',
         'is_active',
         'usage_count',
+        'coins_required',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'coins_required' => 'integer',
     ];
 
     /**

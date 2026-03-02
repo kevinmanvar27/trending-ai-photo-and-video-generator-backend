@@ -32,15 +32,28 @@
                 @enderror
             </div>
 
-            <div class="mb-4">
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="price">
-                    Price ($)
-                </label>
-                <input type="number" step="0.01" name="price" id="price" value="{{ old('price', $plan->price) }}" required
-                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 @error('price') border-red-500 @enderror">
-                @error('price')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="price">
+                        Price ($)
+                    </label>
+                    <input type="number" step="0.01" name="price" id="price" value="{{ old('price', $plan->price) }}" required
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 @error('price') border-red-500 @enderror">
+                    @error('price')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="coins">
+                        Coins
+                    </label>
+                    <input type="number" name="coins" id="coins" value="{{ old('coins', $plan->coins ?? 0) }}" required min="0"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 @error('coins') border-red-500 @enderror">
+                    @error('coins')
+                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
             </div>
 
             <div class="grid grid-cols-2 gap-4 mb-4">

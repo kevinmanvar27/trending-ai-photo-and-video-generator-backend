@@ -59,14 +59,29 @@ class LoginController extends Controller
                 ->first();
 
             if ($activeLog) {
-                $duration = now()->diffInSeconds($activeLog->session_start);
-                $activeLog->update([
-                    'session_end' => now(),
-                    'duration' => $duration,
-                ]);
+                $sessionEnd = now();
+                $sessionStart = $activeLog->session_start;
+                
+                // Calculate duration - ensure it's positive
+                $duration = abs($sessionEnd->diffInSeconds($sessionStart));
+                
+                // Only update if session_end is after session_start
+                if ($sessionEnd->gte($sessionStart)) {
+                    $activeLog->update([
+                        'session_end' => $sessionEnd,
+                        'duration' => $duration,
+                    ]);
 
-                // Update user's total time spent
-                $user->increment('total_time_spent', $duration);
+                    // Update user's total time spent
+                    $user->increment('total_time_spent', $duration);
+                } else {
+                    // If somehow session_end is before session_start, just mark as ended with 0 duration
+                    \Log::warning("Session end time is before start time for log ID: {$activeLog->id}");
+                    $activeLog->update([
+                        'session_end' => $sessionEnd,
+                        'duration' => 0,
+                    ]);
+                }
             }
         }
 

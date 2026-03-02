@@ -39,6 +39,7 @@ class SubscriptionPlanController extends Controller
             'price' => 'required|numeric|min:0',
             'duration_type' => 'required|in:daily,weekly,monthly,yearly',
             'duration_value' => 'required|integer|min:1',
+            'coins' => 'required|integer|min:0',
             'features' => 'nullable|array',
             'is_active' => 'boolean',
         ]);
@@ -70,6 +71,7 @@ class SubscriptionPlanController extends Controller
             'price' => 'required|numeric|min:0',
             'duration_type' => 'required|in:daily,weekly,monthly,yearly',
             'duration_value' => 'required|integer|min:1',
+            'coins' => 'required|integer|min:0',
             'features' => 'nullable|array',
             'is_active' => 'boolean',
         ]);

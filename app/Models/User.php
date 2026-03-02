@@ -103,7 +103,8 @@ class User extends Authenticatable
      */
     public function getFormattedTimeSpentAttribute(): string
     {
-        $seconds = $this->total_time_spent;
+        // Ensure time spent is never negative
+        $seconds = max(0, $this->total_time_spent ?? 0);
         $hours = floor($seconds / 3600);
         $minutes = floor(($seconds % 3600) / 60);
         $secs = $seconds % 60;

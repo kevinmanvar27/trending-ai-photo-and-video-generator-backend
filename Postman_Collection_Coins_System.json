@@ -1,0 +1,489 @@
+{
+  "info": {
+    "name": "Coins System - Image Templates API",
+    "description": "Test collection for the coins-based image template system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearer_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "bearer_token",
+      "value": "YOUR_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "template_id",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Templates",
+      "item": [
+        {
+          "name": "Get All Templates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/templates",
+              "host": ["{{base_url}}"],
+              "path": ["templates"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Template",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/templates/{{template_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["templates", "{{template_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Popular Templates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/templates/popular",
+              "host": ["{{base_url}}"],
+              "path": ["templates", "popular"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Template (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "Test Template with Coins",
+                  "type": "text"
+                },
+                {
+                  "key": "prompt",
+                  "value": "A beautiful landscape with mountains",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "landscape",
+                  "type": "text"
+                },
+                {
+                  "key": "coins_required",
+                  "value": "10",
+                  "type": "text",
+                  "description": "Number of coins required to use this template"
+                },
+                {
+                  "key": "is_active",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/templates",
+              "host": ["{{base_url}}"],
+              "path": ["templates"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Template",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Template Name\",\n  \"prompt\": \"Updated prompt text\",\n  \"category\": \"portrait\",\n  \"coins_required\": 15,\n  \"is_active\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/templates/{{template_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["templates", "{{template_id}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Submissions",
+      "item": [
+        {
+          "name": "Create Submission (With Coins)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "template_id",
+                  "value": "{{template_id}}",
+                  "type": "text",
+                  "description": "ID of the template to use"
+                },
+                {
+                  "key": "user_image",
+                  "type": "file",
+                  "src": [],
+                  "description": "User's image file (JPG, PNG)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/submissions",
+              "host": ["{{base_url}}"],
+              "path": ["submissions"]
+            }
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "template_id",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "user_image",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/submissions",
+                  "host": ["{{base_url}}"],
+                  "path": ["submissions"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Image submission created successfully\",\n  \"data\": {\n    \"id\": 123,\n    \"user_id\": 1,\n    \"template_id\": 1,\n    \"user_image_path\": \"uploads/user_images/...\",\n    \"status\": \"pending\",\n    \"created_at\": \"2026-03-02T10:30:00.000000Z\"\n  }\n}"
+            },
+            {
+              "name": "Insufficient Coins Error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "template_id",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "user_image",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/submissions",
+                  "host": ["{{base_url}}"],
+                  "path": ["submissions"]
+                }
+              },
+              "status": "Payment Required",
+              "code": 402,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"Insufficient coins. This template requires 10 coins but you have 5 available.\",\n  \"error_code\": \"INSUFFICIENT_COINS\"\n}"
+            },
+            {
+              "name": "No Active Subscription Error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    {
+                      "key": "template_id",
+                      "value": "1",
+                      "type": "text"
+                    },
+                    {
+                      "key": "user_image",
+                      "type": "file",
+                      "src": []
+                    }
+                  ]
+                },
+                "url": {
+                  "raw": "{{base_url}}/submissions",
+                  "host": ["{{base_url}}"],
+                  "path": ["submissions"]
+                }
+              },
+              "status": "Payment Required",
+              "code": 402,
+              "_postman_previewlanguage": "json",
+              "header": [],
+              "cookie": [],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"No active subscription found\",\n  \"error_code\": \"NO_ACTIVE_SUBSCRIPTION\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Submissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/submissions",
+              "host": ["{{base_url}}"],
+              "path": ["submissions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Single Submission",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/submissions/1",
+              "host": ["{{base_url}}"],
+              "path": ["submissions", "1"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recent Submissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/submissions/recent",
+              "host": ["{{base_url}}"],
+              "path": ["submissions", "recent"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Submission Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/submissions/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["submissions", "statistics"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Test Scenarios",
+      "item": [
+        {
+          "name": "Test: Free Template (0 coins)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "template_id",
+                  "value": "1",
+                  "type": "text",
+                  "description": "Use a template with coins_required = 0"
+                },
+                {
+                  "key": "user_image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/submissions",
+              "host": ["{{base_url}}"],
+              "path": ["submissions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test: Template Requiring 10 Coins",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "template_id",
+                  "value": "2",
+                  "type": "text",
+                  "description": "Use a template with coins_required = 10"
+                },
+                {
+                  "key": "user_image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/submissions",
+              "host": ["{{base_url}}"],
+              "path": ["submissions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test: Template Requiring 50 Coins",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "template_id",
+                  "value": "3",
+                  "type": "text",
+                  "description": "Use a template with coins_required = 50 (test insufficient coins)"
+                },
+                {
+                  "key": "user_image",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/submissions",
+              "host": ["{{base_url}}"],
+              "path": ["submissions"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

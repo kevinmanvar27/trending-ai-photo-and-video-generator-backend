@@ -16,12 +16,14 @@ class UserSubscription extends Model
         'expires_at',
         'status',
         'cancelled_at',
+        'coins_used',
     ];
 
     protected $casts = [
         'started_at' => 'datetime',
         'expires_at' => 'datetime',
         'cancelled_at' => 'datetime',
+        'coins_used' => 'integer',
     ];
 
     /**
@@ -66,5 +68,39 @@ class UserSubscription extends Model
         }
         
         return now()->diffInDays($this->expires_at);
+    }
+
+    /**
+     * Get remaining coins
+     */
+    public function getRemainingCoinsAttribute(): int
+    {
+        if (!$this->isActive()) {
+            return 0;
+        }
+        
+        $totalCoins = $this->plan->coins ?? 0;
+        return max(0, $totalCoins - $this->coins_used);
+    }
+
+    /**
+     * Use coins from subscription
+     */
+    public function useCoins(int $amount): bool
+    {
+        if ($this->remaining_coins < $amount) {
+            return false;
+        }
+
+        $this->increment('coins_used', $amount);
+        return true;
+    }
+
+    /**
+     * Check if user has enough coins
+     */
+    public function hasEnoughCoins(int $amount): bool
+    {
+        return $this->remaining_coins >= $amount;
     }
 }

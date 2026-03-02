@@ -43,6 +43,7 @@ class ImagePromptTemplateController extends Controller
             'reference_image' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:10240', // 10MB
             'prompt' => 'required|string|max:2000',
             'is_active' => 'boolean',
+            'coins_required' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -52,7 +53,7 @@ class ImagePromptTemplateController extends Controller
         }
 
         try {
-            $data = $request->only(['title', 'type', 'description', 'prompt']);
+            $data = $request->only(['title', 'type', 'description', 'prompt', 'coins_required']);
             $data['is_active'] = $request->has('is_active');
 
             // Store reference image if provided
@@ -112,6 +113,7 @@ class ImagePromptTemplateController extends Controller
             'reference_image' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:10240',
             'prompt' => 'required|string|max:2000',
             'is_active' => 'boolean',
+            'coins_required' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -121,7 +123,7 @@ class ImagePromptTemplateController extends Controller
         }
 
         try {
-            $data = $request->only(['title', 'type', 'description', 'prompt']);
+            $data = $request->only(['title', 'type', 'description', 'prompt', 'coins_required']);
             $data['is_active'] = $request->has('is_active');
 
             // Update reference image if provided

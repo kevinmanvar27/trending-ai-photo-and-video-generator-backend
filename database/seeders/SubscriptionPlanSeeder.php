@@ -19,6 +19,7 @@ class SubscriptionPlanSeeder extends Seeder
                 'price' => 9.99,
                 'duration_type' => 'monthly',
                 'duration_value' => 1,
+                'coins' => 100,
                 'features' => json_encode([
                     'Access to basic features',
                     'Email support',
@@ -33,6 +34,7 @@ class SubscriptionPlanSeeder extends Seeder
                 'price' => 29.99,
                 'duration_type' => 'monthly',
                 'duration_value' => 1,
+                'coins' => 500,
                 'features' => json_encode([
                     'All Basic features',
                     'Priority email support',
@@ -49,6 +51,7 @@ class SubscriptionPlanSeeder extends Seeder
                 'price' => 99.99,
                 'duration_type' => 'monthly',
                 'duration_value' => 1,
+                'coins' => 2000,
                 'features' => json_encode([
                     'All Pro features',
                     '24/7 phone & email support',
@@ -66,6 +69,7 @@ class SubscriptionPlanSeeder extends Seeder
                 'price' => 99.99,
                 'duration_type' => 'yearly',
                 'duration_value' => 1,
+                'coins' => 1200,
                 'features' => json_encode([
                     'Access to basic features',
                     'Email support',

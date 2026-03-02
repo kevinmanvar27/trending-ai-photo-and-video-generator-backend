@@ -14,7 +14,27 @@ class ActivityController extends Controller
     public function startSession(Request $request)
     {
         $user = $request->user();
+        
+        // Close any existing open sessions for this user
+        $existingLog = UserActivityLog::where('user_id', $user->id)
+            ->whereNull('session_end')
+            ->latest()
+            ->first();
+            
+        if ($existingLog) {
+            // Close the existing session
+            $sessionEnd = now();
+            $duration = abs($sessionEnd->diffInSeconds($existingLog->session_start));
+            
+            $existingLog->update([
+                'session_end' => $sessionEnd,
+                'duration' => $duration,
+            ]);
+            
+            $user->increment('total_time_spent', $duration);
+        }
 
+        // Create new session
         $activity = UserActivityLog::create([
             'user_id' => $user->id,
             'session_start' => now(),
@@ -28,6 +48,7 @@ class ActivityController extends Controller
             'message' => 'Session started',
             'data' => [
                 'session_id' => $activity->id,
+                'session_start' => $activity->session_start->toIso8601String(),
             ],
         ]);
     }
@@ -49,10 +70,35 @@ class ActivityController extends Controller
                 'message' => 'Unauthorized',
             ], 403);
         }
+        
+        // Check if session is already ended
+        if ($activity->session_end) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Session already ended',
+                'data' => [
+                    'duration' => $activity->duration,
+                    'session_end' => $activity->session_end->toIso8601String(),
+                ],
+            ], 400);
+        }
 
-        $duration = now()->diffInSeconds($activity->session_start);
+        $sessionEnd = now();
+        $sessionStart = $activity->session_start;
+        
+        // Calculate duration - ensure it's positive
+        $duration = abs($sessionEnd->diffInSeconds($sessionStart));
+        
+        // Validate that session_end is after session_start
+        if ($sessionEnd->lt($sessionStart)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid session end time',
+            ], 400);
+        }
+        
         $activity->update([
-            'session_end' => now(),
+            'session_end' => $sessionEnd,
             'duration' => $duration,
         ]);
 
@@ -64,6 +110,8 @@ class ActivityController extends Controller
             'message' => 'Session ended',
             'data' => [
                 'duration' => $duration,
+                'session_start' => $activity->session_start->toIso8601String(),
+                'session_end' => $activity->session_end->toIso8601String(),
             ],
         ]);
     }

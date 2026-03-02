@@ -15,6 +15,7 @@ class SubscriptionPlan extends Model
         'price',
         'duration_type',
         'duration_value',
+        'coins',
         'features',
         'is_active',
     ];
@@ -23,6 +24,7 @@ class SubscriptionPlan extends Model
         'features' => 'array',
         'is_active' => 'boolean',
         'price' => 'decimal:2',
+        'coins' => 'integer',
     ];
 
     /**
