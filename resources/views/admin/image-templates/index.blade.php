@@ -81,6 +81,19 @@
                     <span><i class="fas fa-clock mr-1"></i> {{ $template->created_at->diffForHumans() }}</span>
                 </div>
 
+                <!-- Coins Required -->
+                <div class="flex items-center text-sm mb-3">
+                    @if($template->coins_required > 0)
+                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
+                            <i class="fas fa-coins mr-1"></i> {{ $template->coins_required }} coins
+                        </span>
+                    @else
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                            <i class="fas fa-gift mr-1"></i> Free
+                        </span>
+                    @endif
+                </div>
+
                 <!-- Actions -->
                 <div class="flex space-x-2">
                     <a href="{{ route('admin.image-templates.show', $template->id) }}" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-center py-2 rounded text-sm">

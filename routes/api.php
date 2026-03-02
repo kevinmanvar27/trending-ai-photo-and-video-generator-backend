@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\ImageSubmissionController;
+use App\Http\Controllers\Api\PageController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -20,6 +21,10 @@ Route::get('/payment/config', [SettingController::class, 'getPaymentConfig']);
 Route::get('/templates', [TemplateController::class, 'index']);
 Route::get('/templates/popular', [TemplateController::class, 'popular']);
 Route::get('/templates/{id}', [TemplateController::class, 'show']);
+
+// Public page routes (for browsing)
+Route::get('/pages', [PageController::class, 'index']);
+Route::get('/pages/{identifier}', [PageController::class, 'show']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {

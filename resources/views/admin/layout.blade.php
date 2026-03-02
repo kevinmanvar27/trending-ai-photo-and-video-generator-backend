@@ -46,6 +46,9 @@
                 <a href="{{ route('admin.image-templates.index') }}" class="block px-4 py-3 hover:bg-gray-700 {{ request()->routeIs('admin.image-templates.*') ? 'bg-gray-700' : '' }}">
                     <i class="fas fa-wand-magic-sparkles mr-2"></i> Image Templates
                 </a>
+                <a href="{{ route('admin.pages.index') }}" class="block px-4 py-3 hover:bg-gray-700 {{ request()->routeIs('admin.pages.*') ? 'bg-gray-700' : '' }}">
+                    <i class="fas fa-file-alt mr-2"></i> Pages
+                </a>
                 <a href="{{ route('admin.settings.index') }}" class="block px-4 py-3 hover:bg-gray-700 {{ request()->routeIs('admin.settings.*') ? 'bg-gray-700' : '' }}">
                     <i class="fas fa-cog mr-2"></i> Settings
                 </a>

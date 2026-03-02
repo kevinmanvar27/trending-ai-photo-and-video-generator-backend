@@ -11,6 +11,10 @@
             <div>
                 <h2 class="text-2xl font-bold text-gray-800 mb-2">{{ $template->title }}</h2>
                 <div class="flex items-center space-x-4 text-sm text-gray-600">
+                    <span class="inline-block px-3 py-1 {{ $template->type == 'video' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' }} rounded-full text-xs font-semibold">
+                        <i class="fas fa-{{ $template->type == 'video' ? 'video' : 'image' }} mr-1"></i>
+                        {{ ucfirst($template->type) }}
+                    </span>
                     <span>
                         <i class="fas fa-calendar mr-1"></i>
                         Created {{ $template->created_at->format('M d, Y') }}
@@ -21,14 +25,23 @@
                     </span>
                 </div>
             </div>
-            <div>
+            <div class="text-right">
                 @if($template->is_active)
-                    <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                    <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium block mb-2">
                         <i class="fas fa-check-circle mr-1"></i> Active
                     </span>
                 @else
-                    <span class="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
+                    <span class="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium block mb-2">
                         <i class="fas fa-times-circle mr-1"></i> Inactive
+                    </span>
+                @endif
+                @if($template->coins_required > 0)
+                    <span class="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium block">
+                        <i class="fas fa-coins mr-1"></i> {{ $template->coins_required }} coins
+                    </span>
+                @else
+                    <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium block">
+                        <i class="fas fa-gift mr-1"></i> Free
                     </span>
                 @endif
             </div>

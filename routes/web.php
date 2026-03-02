@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\UserSubscriptionController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\ImagePromptController;
 use App\Http\Controllers\Admin\ImagePromptTemplateController;
+use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\ImageSubmissionController;
 
 // Public routes
@@ -81,4 +82,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('image-prompts', ImagePromptController::class);
     Route::post('image-prompts/{id}/reprocess', [ImagePromptController::class, 'reprocess'])->name('image-prompts.reprocess');
     Route::get('image-prompts/{id}/download', [ImagePromptController::class, 'download'])->name('image-prompts.download');
+
+    // Pages Management
+    Route::resource('pages', PageController::class);
+    Route::post('pages/{id}/toggle-status', [PageController::class, 'toggleStatus'])->name('pages.toggle-status');
 });
