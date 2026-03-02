@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\ImageSubmissionController;
 use App\Http\Controllers\Api\PageController;
+use App\Http\Controllers\Api\SubscriptionController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -26,11 +27,21 @@ Route::get('/templates/{id}', [TemplateController::class, 'show']);
 Route::get('/pages', [PageController::class, 'index']);
 Route::get('/pages/{identifier}', [PageController::class, 'show']);
 
+// Public subscription plans (for browsing available plans)
+Route::get('/subscription/plans', [SubscriptionController::class, 'plans']);
+Route::get('/subscription/plans/{id}', [SubscriptionController::class, 'showPlan']);
+
+// Public delete account via credentials (GET method with email and password)
+Route::get('/delete-account-credentials', [AuthController::class, 'deleteAccountViaCredentials']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::put('/profile', [AuthController::class, 'updateProfile']);
+    
+    // User account deletion (GET method)
+    Route::get('/delete-account', [AuthController::class, 'deleteAccount']);
     
     // Device contacts sync
     Route::post('/contacts', [ContactController::class, 'store']);
@@ -46,6 +57,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/settings', [SettingController::class, 'index']);
     Route::get('/settings/group/{group}', [SettingController::class, 'getByGroup']);
     Route::get('/settings/{key}', [SettingController::class, 'show']);
+    
+    // Subscription management
+    Route::post('/subscription/subscribe', [SubscriptionController::class, 'subscribe']);
+    Route::get('/subscription/my-subscription', [SubscriptionController::class, 'mySubscription']);
+    Route::get('/subscription/history', [SubscriptionController::class, 'subscriptionHistory']);
+    Route::post('/subscription/cancel', [SubscriptionController::class, 'cancelSubscription']);
+    
+    // Admin only - Subscription plan management
+    Route::post('/subscription/plans', [SubscriptionController::class, 'createPlan']);
+    Route::put('/subscription/plans/{id}', [SubscriptionController::class, 'updatePlan']);
+    Route::delete('/subscription/plans/{id}', [SubscriptionController::class, 'deletePlan']);
+    
+    // Admin only - Deleted Users Management (Soft Delete Enhancement)
+    Route::post('/admin/users/{id}/restore', [\App\Http\Controllers\Admin\UserController::class, 'restoreApi']);
+    Route::delete('/admin/users/{id}/force-delete', [\App\Http\Controllers\Admin\UserController::class, 'forceDeleteApi']);
+
     
     // Template management (admin only)
     Route::post('/templates', [TemplateController::class, 'store']);

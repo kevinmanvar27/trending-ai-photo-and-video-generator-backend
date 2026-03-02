@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web User Delete - Test & Examples</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+        .copy-btn {
+            transition: all 0.3s ease;
+        }
+        .copy-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-6">
+            <div class="text-center">
+                <h1 class="text-5xl font-bold text-white mb-4">🌐 Web User Delete</h1>
+                <p class="text-white text-xl mb-2">User Self-Service Account Deletion</p>
+                <p class="text-white text-opacity-80">Test Page & Examples</p>
+            </div>
+        </div>
+
+        <!-- Quick Access -->
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-6">
+            <h2 class="text-3xl font-bold text-white mb-6">🚀 Quick Access</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="/delete-my-account.html" class="bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition text-center">
+                    🗑️ Open Delete Page
+                </a>
+                <a href="#examples" class="bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold py-4 px-6 rounded-lg shadow-lg hover:shadow-xl transition text-center">
+                    📋 View Examples
+                </a>
+            </div>
+        </div>
+
+        <!-- Overview -->
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-6">
+            <h2 class="text-3xl font-bold text-white mb-6">📖 Overview</h2>
+            <div class="space-y-4 text-white">
+                <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                    <h3 class="font-bold text-lg mb-2">✨ What is This?</h3>
+                    <p class="text-sm text-white text-opacity-90">
+                        A beautiful web interface that allows users to delete their own accounts by entering their email and password. 
+                        The system verifies credentials and permanently deletes the account along with all authentication tokens.
+                    </p>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                    <h3 class="font-bold text-lg mb-2">🎯 Key Features</h3>
+                    <ul class="text-sm text-white text-opacity-90 space-y-1">
+                        <li>✓ Beautiful gradient UI with Tailwind CSS</li>
+                        <li>✓ Email + Password authentication</li>
+                        <li>✓ Multiple warning messages</li>
+                        <li>✓ Confirmation checkbox required</li>
+                        <li>✓ Admin account protection</li>
+                        <li>✓ Complete token cleanup</li>
+                        <li>✓ Detailed success/error pages</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- How It Works -->
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-6">
+            <h2 class="text-3xl font-bold text-white mb-6">⚙️ How It Works</h2>
+            <div class="space-y-4">
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="bg-purple-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center">1</span>
+                        <h3 class="font-bold">User Opens Delete Page</h3>
+                    </div>
+                    <p class="text-sm text-white text-opacity-80 ml-11">
+                        Navigate to <code class="bg-black bg-opacity-30 px-2 py-1 rounded">/delete-my-account.html</code>
+                    </p>
+                </div>
+
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="bg-purple-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center">2</span>
+                        <h3 class="font-bold">Enter Credentials</h3>
+                    </div>
+                    <p class="text-sm text-white text-opacity-80 ml-11">
+                        Fill in email and password fields
+                    </p>
+                </div>
+
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="bg-purple-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center">3</span>
+                        <h3 class="font-bold">Confirm Understanding</h3>
+                    </div>
+                    <p class="text-sm text-white text-opacity-80 ml-11">
+                        Check the confirmation checkbox
+                    </p>
+                </div>
+
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="bg-purple-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center">4</span>
+                        <h3 class="font-bold">Submit & Confirm</h3>
+                    </div>
+                    <p class="text-sm text-white text-opacity-80 ml-11">
+                        Click delete button and confirm in alert dialog
+                    </p>
+                </div>
+
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="bg-purple-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center">5</span>
+                        <h3 class="font-bold">Redirect to Endpoint</h3>
+                    </div>
+                    <p class="text-sm text-white text-opacity-80 ml-11">
+                        Browser redirects to <code class="bg-black bg-opacity-30 px-2 py-1 rounded">/delete-my-account?email={email}&password={password}</code>
+                    </p>
+                </div>
+
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="bg-purple-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center">6</span>
+                        <h3 class="font-bold">Server Processing</h3>
+                    </div>
+                    <p class="text-sm text-white text-opacity-80 ml-11">
+                        Server validates credentials and deletes account
+                    </p>
+                </div>
+
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center space-x-3 mb-2">
+                        <span class="bg-purple-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center">7</span>
+                        <h3 class="font-bold">Display Result</h3>
+                    </div>
+                    <p class="text-sm text-white text-opacity-80 ml-11">
+                        Show success (green) or error (red) result page
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- URL Examples -->
+        <div id="examples" class="glass-effect rounded-2xl shadow-2xl p-8 mb-6">
+            <h2 class="text-3xl font-bold text-white mb-6">🔗 URL Examples</h2>
+            
+            <!-- Example 1 -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-6 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-white font-bold text-lg">Example 1: Delete Regular User</h3>
+                    <button onclick="copyToClipboard('example1')" class="copy-btn bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600">
+                        📋 Copy
+                    </button>
+                </div>
+                <div id="example1" class="code-block">http://localhost/delete-my-account?email=john.doe@example.com&password=SecurePass123</div>
+                <p class="text-white text-sm mt-2 text-opacity-80">
+                    <strong>Expected:</strong> If credentials are valid, account will be deleted
+                </p>
+            </div>
+
+            <!-- Example 2 -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-6 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-white font-bold text-lg">Example 2: Invalid Password</h3>
+                    <button onclick="copyToClipboard('example2')" class="copy-btn bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600">
+                        📋 Copy
+                    </button>
+                </div>
+                <div id="example2" class="code-block">http://localhost/delete-my-account?email=john.doe@example.com&password=wrongpassword</div>
+                <p class="text-white text-sm mt-2 text-opacity-80">
+                    <strong>Expected:</strong> Error page with "Invalid credentials" message
+                </p>
+            </div>
+
+            <!-- Example 3 -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-6 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-white font-bold text-lg">Example 3: User Not Found</h3>
+                    <button onclick="copyToClipboard('example3')" class="copy-btn bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600">
+                        📋 Copy
+                    </button>
+                </div>
+                <div id="example3" class="code-block">http://localhost/delete-my-account?email=nonexistent@example.com&password=anypassword</div>
+                <p class="text-white text-sm mt-2 text-opacity-80">
+                    <strong>Expected:</strong> Error page with "User not found" message
+                </p>
+            </div>
+
+            <!-- Example 4 -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-6 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-white font-bold text-lg">Example 4: Admin Protection</h3>
+                    <button onclick="copyToClipboard('example4')" class="copy-btn bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600">
+                        📋 Copy
+                    </button>
+                </div>
+                <div id="example4" class="code-block">http://localhost/delete-my-account?email=admin@example.com&password=adminpassword</div>
+                <p class="text-white text-sm mt-2 text-opacity-80">
+                    <strong>Expected:</strong> Error page with "Cannot delete admin account" message
+                </p>
+            </div>
+
+            <!-- Example 5 -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-6 mb-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-white font-bold text-lg">Example 5: Missing Parameters</h3>
+                    <button onclick="copyToClipboard('example5')" class="copy-btn bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600">
+                        📋 Copy
+                    </button>
+                </div>
+                <div id="example5" class="code-block">http://localhost/delete-my-account?email=test@example.com</div>
+                <p class="text-white text-sm mt-2 text-opacity-80">
+                    <strong>Expected:</strong> Error page with "Missing required parameters" message
+                </p>
+            </div>
+
+            <!-- Example 6 -->
+            <div class="bg-white bg-opacity-10 rounded-lg p-6">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="text-white font-bold text-lg">Example 6: Invalid Email Format</h3>
+                    <button onclick="copyToClipboard('example6')" class="copy-btn bg-blue-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-600">
+                        📋 Copy
+                    </button>
+                </div>
+                <div id="example6" class="code-block">http://localhost/delete-my-account?email=notanemail&password=password123</div>
+                <p class="text-white text-sm mt-2 text-opacity-80">
+                    <strong>Expected:</strong> Error page with "Invalid email format" message
+                </p>
+            </div>
+        </div>
+
+        <!-- Testing Guide -->
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-6">
+            <h2 class="text-3xl font-bold text-white mb-6">🧪 Testing Guide</h2>
+            <div class="space-y-4">
+                <div class="bg-green-500 bg-opacity-20 rounded-lg p-4 border border-green-400 border-opacity-30">
+                    <h3 class="text-white font-bold mb-2">✅ Test Successful Deletion</h3>
+                    <ol class="text-white text-sm space-y-1 text-opacity-90">
+                        <li>1. Create a test user account</li>
+                        <li>2. Open <code class="bg-black bg-opacity-30 px-2 py-1 rounded">/delete-my-account.html</code></li>
+                        <li>3. Enter test user email and password</li>
+                        <li>4. Check confirmation checkbox</li>
+                        <li>5. Click delete button</li>
+                        <li>6. Confirm in alert dialog</li>
+                        <li>7. Verify green success page appears</li>
+                        <li>8. Verify user is deleted from database</li>
+                    </ol>
+                </div>
+
+                <div class="bg-red-500 bg-opacity-20 rounded-lg p-4 border border-red-400 border-opacity-30">
+                    <h3 class="text-white font-bold mb-2">❌ Test Error Scenarios</h3>
+                    <ul class="text-white text-sm space-y-1 text-opacity-90">
+                        <li>• Test with wrong password</li>
+                        <li>• Test with non-existent email</li>
+                        <li>• Test with admin account</li>
+                        <li>• Test with missing email parameter</li>
+                        <li>• Test with missing password parameter</li>
+                        <li>• Test with invalid email format</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Warning -->
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-6">
+            <h2 class="text-3xl font-bold text-white mb-6">⚠️ Security Considerations</h2>
+            <div class="bg-yellow-500 bg-opacity-20 rounded-lg p-6 border border-yellow-400 border-opacity-30">
+                <div class="space-y-3 text-white text-sm">
+                    <p><strong>⚠️ IMPORTANT SECURITY NOTES:</strong></p>
+                    <ul class="space-y-2 ml-4">
+                        <li>🔓 <strong>Credentials in URL:</strong> Email and password are visible in browser history and server logs</li>
+                        <li>🔓 <strong>No HTTPS:</strong> Use HTTPS in production to encrypt traffic</li>
+                        <li>🔓 <strong>No Rate Limiting:</strong> Consider adding throttling to prevent abuse</li>
+                        <li>🔓 <strong>GET Method:</strong> Not RESTful best practice (POST is recommended)</li>
+                        <li>✅ <strong>Password Verification:</strong> Password is securely compared using bcrypt</li>
+                        <li>✅ <strong>Admin Protection:</strong> Admin accounts cannot be deleted</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files Created -->
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 mb-6">
+            <h2 class="text-3xl font-bold text-white mb-6">📁 Files Created</h2>
+            <div class="space-y-3">
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-bold">Input Page</p>
+                            <code class="text-xs text-white text-opacity-80">public/delete-my-account.html</code>
+                        </div>
+                        <span class="bg-green-500 px-3 py-1 rounded-full text-xs">✓ Created</span>
+                    </div>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-bold">Result View</p>
+                            <code class="text-xs text-white text-opacity-80">resources/views/admin/users/delete-account-result.blade.php</code>
+                        </div>
+                        <span class="bg-green-500 px-3 py-1 rounded-full text-xs">✓ Created</span>
+                    </div>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-bold">Controller Method</p>
+                            <code class="text-xs text-white text-opacity-80">UserController@deleteAccountViaCredentialsWeb</code>
+                        </div>
+                        <span class="bg-green-500 px-3 py-1 rounded-full text-xs">✓ Added</span>
+                    </div>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-bold">Web Route</p>
+                            <code class="text-xs text-white text-opacity-80">GET /delete-my-account</code>
+                        </div>
+                        <span class="bg-green-500 px-3 py-1 rounded-full text-xs">✓ Added</span>
+                    </div>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-4 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="font-bold">Documentation</p>
+                            <code class="text-xs text-white text-opacity-80">WEB_USER_DELETE_DOCUMENTATION.md</code>
+                        </div>
+                        <span class="bg-green-500 px-3 py-1 rounded-full text-xs">✓ Created</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="glass-effect rounded-2xl shadow-2xl p-8">
+            <h2 class="text-3xl font-bold text-white mb-6">🔗 Quick Links</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <a href="/delete-my-account.html" class="bg-purple-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:bg-purple-600 transition text-center">
+                    🗑️ Delete Page
+                </a>
+                <a href="/" class="bg-blue-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:bg-blue-600 transition text-center">
+                    🏠 Homepage
+                </a>
+                <a href="/register" class="bg-green-500 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:bg-green-600 transition text-center">
+                    📝 Register
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                // Show success feedback
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '✅ Copied!';
+                button.classList.add('bg-green-500');
+                button.classList.remove('bg-blue-500');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('bg-green-500');
+                    button.classList.add('bg-blue-500');
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy: ' + err);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -161,4 +161,129 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Delete user account (GET method)
+     */
+    public function deleteAccount(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            // Store user info before deletion
+            $userName = $user->name;
+            $userEmail = $user->email;
+            
+            // Delete all user's tokens
+            $user->tokens()->delete();
+            
+            // Delete user's related data (optional - uncomment if needed)
+            // $user->contacts()->delete();
+            // $user->activitySessions()->delete();
+            // $user->subscriptions()->delete();
+            // $user->imageSubmissions()->delete();
+            
+            // Delete the user
+            $user->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Account deleted successfully',
+                'data' => [
+                    'deleted_user' => [
+                        'name' => $userName,
+                        'email' => $userEmail,
+                    ],
+                ],
+            ], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete account',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete user account via GET with email and password
+     */
+    public function deleteAccountViaCredentials(Request $request)
+    {
+        // Get email and password from query parameters
+        $email = $request->query('email');
+        $password = $request->query('password');
+
+        // Validate required parameters
+        if (!$email || !$password) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email and password are required',
+                'error' => 'Please provide both email and password parameters in the URL'
+            ], 400);
+        }
+
+        try {
+            // Find user by email
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'User not found',
+                    'error' => 'No user found with the provided email address'
+                ], 404);
+            }
+
+            // Verify password
+            if (!Hash::check($password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid credentials',
+                    'error' => 'The provided password is incorrect'
+                ], 401);
+            }
+
+            // Check if user is suspended
+            if ($user->isSuspended()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Account is suspended',
+                    'error' => 'Cannot delete a suspended account. Please contact support.',
+                    'reason' => $user->suspension_reason
+                ], 403);
+            }
+
+            // Store user info before deletion
+            $userName = $user->name;
+            $userEmail = $user->email;
+            $userId = $user->id;
+
+            // Delete all user's tokens
+            $user->tokens()->delete();
+
+            // Delete the user
+            $user->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Account deleted successfully',
+                'data' => [
+                    'deleted_user' => [
+                        'id' => $userId,
+                        'name' => $userName,
+                        'email' => $userEmail,
+                    ],
+                ],
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete account',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

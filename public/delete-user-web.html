@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Delete User via URL - Test Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+        }
+
+        .section-title {
+            color: #667eea;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #667eea;
+            margin-right: 12px;
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .url-display {
+            background: #2d3748;
+            color: #68d391;
+            padding: 16px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            word-break: break-all;
+            margin-top: 15px;
+            border: 2px solid #4a5568;
+        }
+
+        .url-label {
+            color: #a0aec0;
+            font-size: 12px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn-copy {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-copy:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.4);
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            color: #856404;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .warning-box strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .warning-box ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .warning-box li {
+            margin-bottom: 5px;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            color: #0c5460;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .info-box strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            overflow-x: auto;
+            border: 2px solid #4a5568;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            display: flex;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            color: #667eea;
+        }
+
+        .feature-text {
+            flex: 1;
+        }
+
+        .feature-text strong {
+            display: block;
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .feature-text span {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 35px;
+            height: 35px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+
+        .users-list {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .user-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .user-item:hover {
+            background: #f8f9fa;
+        }
+
+        .user-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .user-email {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .user-id {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            🗑️ Delete User via URL
+        </h1>
+        <p class="subtitle">Test the web-based user deletion using GET method with URL parameters</p>
+
+        <!-- Warning Box -->
+        <div class="warning-box">
+            <strong>⚠️ Warning: Permanent Action</strong>
+            <p>This feature allows you to delete users by visiting a URL. This action is permanent and cannot be undone.</p>
+            <ul>
+                <li>User account will be permanently deleted</li>
+                <li>All user tokens will be invalidated</li>
+                <li>Admin users cannot be deleted via this method</li>
+                <li>You must be logged in as admin to use this feature</li>
+            </ul>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box">
+            <strong>ℹ️ How It Works</strong>
+            <p>Simply provide a user ID in the URL parameter, and the system will delete that user from the database. The result will be displayed on a dedicated page.</p>
+        </div>
+
+        <!-- Step 1: Generate URL -->
+        <div class="section">
+            <div class="section-title">
+                <span class="step-number">1</span>
+                Generate Delete URL
+            </div>
+            
+            <div class="form-group">
+                <label>User ID to Delete</label>
+                <input type="number" id="userId" placeholder="Enter user ID (e.g., 123)" min="1" value="">
+            </div>
+
+            <div class="url-label">Generated URL:</div>
+            <div class="url-display" id="generatedUrl">
+                Enter a user ID above to generate the delete URL
+            </div>
+
+            <button class="btn-copy" onclick="copyUrl()">
+                📋 Copy URL to Clipboard
+            </button>
+        </div>
+
+        <!-- Step 2: Execute Deletion -->
+        <div class="section">
+            <div class="section-title">
+                <span class="step-number">2</span>
+                Execute Deletion
+            </div>
+            
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                Click the button below to open the delete URL in a new tab. Make sure you're logged in as admin.
+            </p>
+
+            <button class="btn-danger" onclick="executeDelete()" id="deleteBtn" disabled>
+                🗑️ Delete User (Opens in New Tab)
+            </button>
+        </div>
+
+        <!-- Features -->
+        <div class="section">
+            <div class="section-title">
+                ✨ Features
+            </div>
+            
+            <div class="feature-list">
+                <div class="feature-item">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-text">
+                        <strong>Secure</strong>
+                        <span>Requires admin authentication</span>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-text">
+                        <strong>Fast</strong>
+                        <span>Instant deletion via GET</span>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-text">
+                        <strong>Detailed</strong>
+                        <span>Shows deleted user info</span>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🛡️</div>
+                    <div class="feature-text">
+                        <strong>Protected</strong>
+                        <span>Can't delete admin users</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- URL Format Examples -->
+        <div class="section">
+            <div class="section-title">
+                📖 URL Format & Examples
+            </div>
+            
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+                The URL follows this format:
+            </p>
+
+            <div class="code-block">
+                http://localhost/admin/delete-user?user_id=USER_ID
+            </div>
+
+            <p style="color: #666; margin: 15px 0; font-size: 14px;">
+                <strong>Examples:</strong>
+            </p>
+
+            <div class="code-block">
+                http://localhost/admin/delete-user?user_id=1
+            </div>
+
+            <div class="code-block">
+                http://localhost/admin/delete-user?user_id=42
+            </div>
+
+            <div class="code-block">
+                http://localhost/admin/delete-user?user_id=999
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="section">
+            <div class="section-title">
+                🔗 Quick Links
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+                <button class="btn-primary" onclick="window.open('/admin/users', '_blank')" style="margin: 0;">
+                    👥 View All Users
+                </button>
+                <button class="btn-primary" onclick="window.open('/admin/dashboard', '_blank')" style="margin: 0;">
+                    📊 Admin Dashboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = window.location.origin;
+        
+        // Update URL when user ID changes
+        document.getElementById('userId').addEventListener('input', function() {
+            const userId = this.value;
+            const urlDisplay = document.getElementById('generatedUrl');
+            const deleteBtn = document.getElementById('deleteBtn');
+            
+            if (userId && userId > 0) {
+                const url = `${BASE_URL}/admin/delete-user?user_id=${userId}`;
+                urlDisplay.textContent = url;
+                deleteBtn.disabled = false;
+            } else {
+                urlDisplay.textContent = 'Enter a user ID above to generate the delete URL';
+                deleteBtn.disabled = true;
+            }
+        });
+
+        // Copy URL to clipboard
+        function copyUrl() {
+            const userId = document.getElementById('userId').value;
+            
+            if (!userId || userId <= 0) {
+                alert('Please enter a valid user ID first!');
+                return;
+            }
+            
+            const url = `${BASE_URL}/admin/delete-user?user_id=${userId}`;
+            
+            navigator.clipboard.writeText(url).then(function() {
+                alert('✅ URL copied to clipboard!\n\n' + url);
+            }, function(err) {
+                alert('❌ Failed to copy URL: ' + err);
+            });
+        }
+
+        // Execute delete by opening URL
+        function executeDelete() {
+            const userId = document.getElementById('userId').value;
+            
+            if (!userId || userId <= 0) {
+                alert('Please enter a valid user ID!');
+                return;
+            }
+            
+            if (!confirm(`⚠️ Are you sure you want to delete user with ID ${userId}?\n\nThis action cannot be undone!`)) {
+                return;
+            }
+            
+            const url = `${BASE_URL}/admin/delete-user?user_id=${userId}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
