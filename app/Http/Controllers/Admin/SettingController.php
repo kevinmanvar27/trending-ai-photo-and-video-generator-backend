@@ -53,6 +53,13 @@ class SettingController extends Controller
             'grok_video_fps' => 'nullable|integer|min:1|max:60',
             'grok_max_tokens' => 'nullable|integer|min:100|max:10000',
             'grok_timeout' => 'nullable|integer|min:30|max:600',
+            // Referral settings validation
+            'referral_coins_per_referral' => 'nullable|integer|min:0|max:10000',
+            'referral_bonus_for_new_user' => 'nullable|integer|min:0|max:10000',
+            'referral_system_enabled' => 'nullable|in:0,1',
+            // Google authentication settings
+            'google_client_id' => 'nullable|string|max:500',
+            'google_login_enabled' => 'nullable|in:0,1',
         ]);
 
         // Handle file uploads
@@ -105,6 +112,11 @@ class SettingController extends Controller
             'grok_video_fps' => ['type' => 'number', 'group' => 'api'],
             'grok_max_tokens' => ['type' => 'number', 'group' => 'api'],
             'grok_timeout' => ['type' => 'number', 'group' => 'api'],
+            // Referral settings
+            'referral_coins_per_referral' => ['type' => 'number', 'group' => 'referral'],
+            'referral_bonus_for_new_user' => ['type' => 'number', 'group' => 'referral'],
+            // Google authentication settings
+            'google_client_id' => ['type' => 'text', 'group' => 'authentication'],
         ];
 
         foreach ($textSettings as $key => $config) {
@@ -115,6 +127,12 @@ class SettingController extends Controller
 
         // Handle razorpay enabled checkbox
         Setting::set('razorpay_enabled', $request->has('razorpay_enabled') ? '1' : '0', 'boolean', 'payment');
+        
+        // Handle referral system enabled checkbox (receives '0' or '1' from hidden+checkbox combo)
+        Setting::set('referral_system_enabled', $request->input('referral_system_enabled', '0'), 'boolean', 'referral');
+        
+        // Handle google login enabled checkbox
+        Setting::set('google_login_enabled', $request->input('google_login_enabled', '0'), 'boolean', 'authentication');
 
         // Prepare data for .env file update (map settings to ENV variables)
         $envData = [];

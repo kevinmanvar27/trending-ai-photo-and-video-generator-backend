@@ -29,6 +29,25 @@ class Setting extends Model
     }
 
     /**
+     * Get a boolean setting value by key
+     */
+    public static function getBool($key, $default = false)
+    {
+        $value = self::get($key, $default);
+        
+        // Handle various boolean representations
+        if (is_bool($value)) {
+            return $value;
+        }
+        
+        if (is_string($value)) {
+            return in_array(strtolower($value), ['1', 'true', 'yes', 'on'], true);
+        }
+        
+        return (bool) $value;
+    }
+
+    /**
      * Set a setting value
      */
     public static function set($key, $value, $type = 'text', $group = 'general')

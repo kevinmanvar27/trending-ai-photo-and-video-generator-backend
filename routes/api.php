@@ -7,13 +7,19 @@ use App\Http\Controllers\Api\ActivityController;
 use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\GenerationController;
+use App\Http\Controllers\Api\ReferralController;
+use App\Http\Controllers\Api\Admin\ReferralSettingsController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/google-login', [AuthController::class, 'googleLogin']);
 
 // Public subscription plans (can be viewed without auth)
 Route::get('/subscription/plans', [SubscriptionController::class, 'plans']);
+
+// Public referral code validation
+Route::post('/referral/validate', [ReferralController::class, 'validateReferralCode']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -48,5 +54,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/activity/start', [ActivityController::class, 'startSession']);
     Route::post('/activity/end', [ActivityController::class, 'endSession']);
     Route::get('/activity/history', [ActivityController::class, 'history']);
+    
+    // Referral System
+    Route::prefix('referral')->group(function () {
+        Route::get('/info', [ReferralController::class, 'getReferralInfo']);
+        Route::get('/list', [ReferralController::class, 'getReferralList']);
+        Route::get('/stats', [ReferralController::class, 'getReferralStats']);
+        Route::post('/redeem', [ReferralController::class, 'redeemCoins']);
+    });
+});
+
+// Admin routes (protected with admin middleware)
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    // Referral Settings Management
+    Route::prefix('referral-settings')->group(function () {
+        Route::get('/', [ReferralSettingsController::class, 'getReferralSettings']);
+        Route::put('/coins', [ReferralSettingsController::class, 'updateReferralCoins']);
+        Route::put('/bonus', [ReferralSettingsController::class, 'updateNewUserBonus']);
+        Route::put('/all', [ReferralSettingsController::class, 'updateAllSettings']);
+        Route::post('/toggle', [ReferralSettingsController::class, 'toggleReferralSystem']);
+    });
 });
 

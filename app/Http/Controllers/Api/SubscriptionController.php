@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\SubscriptionPlan;
 use App\Models\UserSubscription;
+use App\Services\ReferralService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -164,6 +165,16 @@ class SubscriptionController extends Controller
                     'status' => 'active',
                     'coins_used' => 0,
                 ]);
+
+                // Complete referral if this is user's first subscription
+                $hasExistingSubscription = UserSubscription::where('user_id', $user->id)
+                    ->where('id', '!=', $subscription->id)
+                    ->exists();
+                
+                if (!$hasExistingSubscription) {
+                    // This is the first subscription, complete the referral
+                    ReferralService::completeReferral($user->id, 100);
+                }
 
                 DB::commit();
 

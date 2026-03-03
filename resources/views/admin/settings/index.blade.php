@@ -49,6 +49,14 @@
                     class="tab-button border-b-2 border-transparent py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                     <i class="fas fa-key mr-2"></i>API Settings
                 </button>
+                <button type="button" onclick="showTab('referral')" id="tab-referral"
+                    class="tab-button border-b-2 border-transparent py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="fas fa-users mr-2"></i>Referral System
+                </button>
+                <button type="button" onclick="showTab('authentication')" id="tab-authentication"
+                    class="tab-button border-b-2 border-transparent py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="fas fa-shield-alt mr-2"></i>Authentication
+                </button>
             </nav>
         </div>
 
@@ -525,6 +533,293 @@
             </div>
         </div>
 
+        <!-- Referral System Tab -->
+        <div id="content-referral" class="tab-content hidden">
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800">
+                            <i class="fas fa-gift mr-2"></i>Referral Rewards Configuration
+                        </h2>
+                        <p class="text-gray-600 text-sm mt-1">
+                            Configure how many coins users earn through referrals
+                        </p>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="flex items-center cursor-pointer">
+                            <div class="relative">
+                                <!-- Hidden input to ensure a value is always sent -->
+                                <input type="hidden" name="referral_system_enabled" value="0">
+                                <input type="checkbox" name="referral_system_enabled" value="1"
+                                    {{ old('referral_system_enabled', $settings->get('referral_system_enabled')->value ?? '1') == '1' ? 'checked' : '' }}
+                                    class="sr-only" id="referral-toggle">
+                                <div class="block bg-gray-300 w-14 h-8 rounded-full"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
+                            </div>
+                            <div class="ml-3 text-gray-700 font-medium">
+                                <span id="referral-status-text">
+                                    {{ old('referral_system_enabled', $settings->get('referral_system_enabled')->value ?? '1') == '1' ? 'Enabled' : 'Disabled' }}
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Referrer Coins -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-blue-500 text-white rounded-full p-3 mr-4">
+                                <i class="fas fa-coins text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">Referrer Reward</h3>
+                                <p class="text-sm text-gray-600">Coins for the person who refers</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                Coins Per Successful Referral
+                            </label>
+                            <div class="relative">
+                                <input type="number" name="referral_coins_per_referral" 
+                                    value="{{ old('referral_coins_per_referral', $settings->get('referral_coins_per_referral')->value ?? '100') }}"
+                                    class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 text-lg font-semibold leading-tight focus:outline-none focus:shadow-outline focus:border-blue-500"
+                                    placeholder="100" min="0" max="10000" id="referrer-coins">
+                                <div class="absolute right-3 top-3 text-gray-400">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 text-xs mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Awarded when referred user subscribes (0-10,000 coins)
+                            </p>
+                            <div class="mt-3 p-3 bg-white rounded border border-blue-200">
+                                <p class="text-sm text-gray-700">
+                                    <strong>Example:</strong> If set to <span id="referrer-preview" class="font-bold text-blue-600">100</span> coins, 
+                                    each successful referral earns the referrer <span id="referrer-preview-2" class="font-bold text-blue-600">100</span> coins.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- New User Bonus -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-green-500 text-white rounded-full p-3 mr-4">
+                                <i class="fas fa-user-plus text-2xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-800">New User Bonus</h3>
+                                <p class="text-sm text-gray-600">Welcome bonus for new users</p>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">
+                                Bonus Coins for New Users
+                            </label>
+                            <div class="relative">
+                                <input type="number" name="referral_bonus_for_new_user" 
+                                    value="{{ old('referral_bonus_for_new_user', $settings->get('referral_bonus_for_new_user')->value ?? '50') }}"
+                                    class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 text-lg font-semibold leading-tight focus:outline-none focus:shadow-outline focus:border-green-500"
+                                    placeholder="50" min="0" max="10000" id="new-user-coins">
+                                <div class="absolute right-3 top-3 text-gray-400">
+                                    <i class="fas fa-coins"></i>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 text-xs mt-2">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Bonus given to users who register with a referral code (0-10,000 coins)
+                            </p>
+                            <div class="mt-3 p-3 bg-white rounded border border-green-200">
+                                <p class="text-sm text-gray-700">
+                                    <strong>Example:</strong> If set to <span id="new-user-preview" class="font-bold text-green-600">50</span> coins, 
+                                    new users get <span id="new-user-preview-2" class="font-bold text-green-600">50</span> bonus coins on signup.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Summary -->
+                <div class="mt-6 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                        <i class="fas fa-chart-line mr-2"></i>Referral System Overview
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="text-sm text-gray-600 mb-1">Total Cost Per Referral</div>
+                            <div class="text-2xl font-bold text-purple-600" id="total-cost">
+                                {{ (old('referral_coins_per_referral', $settings->get('referral_coins_per_referral')->value ?? '100') + old('referral_bonus_for_new_user', $settings->get('referral_bonus_for_new_user')->value ?? '50')) }} coins
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">Referrer + New User</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="text-sm text-gray-600 mb-1">System Status</div>
+                            <div class="text-2xl font-bold" id="system-status-display">
+                                <span class="{{ old('referral_system_enabled', $settings->get('referral_system_enabled')->value ?? '1') == '1' ? 'text-green-600' : 'text-red-600' }}">
+                                    {{ old('referral_system_enabled', $settings->get('referral_system_enabled')->value ?? '1') == '1' ? '● Active' : '● Inactive' }}
+                                </span>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">Current State</div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="text-sm text-gray-600 mb-1">Quick Actions</div>
+                            <div class="flex gap-2 mt-2">
+                                <button type="button" onclick="setPreset('standard')" 
+                                    class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
+                                    Standard (100/50)
+                                </button>
+                                <button type="button" onclick="setPreset('aggressive')" 
+                                    class="text-xs bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded">
+                                    Aggressive (300/150)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help Section -->
+                <div class="mt-6 bg-yellow-50 border-l-4 border-yellow-400 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-lightbulb text-yellow-400 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-yellow-800">Tips for Setting Referral Rewards</h3>
+                            <div class="mt-2 text-sm text-yellow-700">
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li><strong>Standard:</strong> 100 coins for referrer, 50 for new user - Balanced approach</li>
+                                    <li><strong>Aggressive Growth:</strong> 300/150 - High incentive for viral growth campaigns</li>
+                                    <li><strong>Conservative:</strong> 50/25 - Lower cost per acquisition</li>
+                                    <li><strong>Premium:</strong> 500/200 - Target high-value customers</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Authentication Tab -->
+        <div id="content-authentication" class="tab-content hidden">
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fab fa-google mr-2"></i>Google Login Configuration
+                </h2>
+
+                <div class="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                Configure Google Sign-In for your mobile application. Get your credentials from 
+                                <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="font-semibold underline">
+                                    Google Cloud Console
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="flex items-center mb-4">
+                        <input type="hidden" name="google_login_enabled" value="0">
+                        <input type="checkbox" name="google_login_enabled" value="1" 
+                            {{ old('google_login_enabled', $settings->get('google_login_enabled')->value ?? '0') == '1' ? 'checked' : '' }}
+                            class="form-checkbox h-5 w-5 text-blue-600">
+                        <span class="ml-2 text-gray-700 font-bold">Enable Google Login</span>
+                    </label>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Google Client ID
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="google_client_id" 
+                        value="{{ old('google_client_id', $settings->get('google_client_id')->value ?? '') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono"
+                        placeholder="123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com">
+                    <p class="text-gray-500 text-xs mt-1">Your Google OAuth 2.0 Client ID (ends with .apps.googleusercontent.com)</p>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4">
+                    <h3 class="text-sm font-semibold text-gray-800 mb-3">
+                        <i class="fas fa-book mr-2"></i>Setup Instructions
+                    </h3>
+                    <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">
+                        <li>Go to <a href="https://console.cloud.google.com/" target="_blank" class="text-blue-600 hover:underline">Google Cloud Console</a></li>
+                        <li>Create a new project or select an existing one</li>
+                        <li>Enable the Google+ API</li>
+                        <li>Go to "Credentials" and create OAuth 2.0 Client ID</li>
+                        <li>Select "Android" or "iOS" as application type</li>
+                        <li>Add your app's package name and SHA-1 certificate fingerprint</li>
+                        <li>Copy the Client ID and paste it above</li>
+                        <li>For Flutter, also create a "Web" OAuth client for the web flow</li>
+                    </ol>
+                </div>
+
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mt-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-yellow-700">
+                                <strong>Important:</strong> Make sure to configure authorized redirect URIs in Google Cloud Console. 
+                                For mobile apps, you typically need both Android and iOS client IDs.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-mobile-alt mr-2"></i>Flutter Integration
+                </h2>
+                
+                <div class="prose max-w-none">
+                    <p class="text-gray-700 mb-3">To integrate Google Sign-In in your Flutter app:</p>
+                    
+                    <div class="bg-gray-800 text-gray-100 p-4 rounded-lg overflow-x-auto mb-4">
+                        <pre class="text-sm"><code>// 1. Add dependency to pubspec.yaml
+dependencies:
+  google_sign_in: ^6.1.5
+  http: ^1.1.0
+
+// 2. Implement Google Sign-In
+final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+final GoogleSignInAuthentication googleAuth = await googleUser!.authentication;
+
+// 3. Send ID token to your backend
+final response = await http.post(
+  Uri.parse('YOUR_BACKEND_URL/api/google-login'),
+  headers: {'Content-Type': 'application/json'},
+  body: jsonEncode({
+    'id_token': googleAuth.idToken,
+    'referral_code': 'OPTIONAL123', // Optional
+  }),
+);
+
+// 4. Get bearer token from response
+final data = jsonDecode(response.body);
+final bearerToken = data['data']['token'];</code></pre>
+                    </div>
+
+                    <p class="text-gray-600 text-sm mt-3">
+                        <i class="fas fa-book mr-1"></i>
+                        <a href="https://pub.dev/packages/google_sign_in" target="_blank" class="text-blue-600 hover:underline">
+                            View google_sign_in package documentation
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <!-- Save Button -->
         <div class="flex justify-end">
             <button type="submit" 
@@ -644,6 +939,97 @@ function testApiKey() {
         btn.innerHTML = '<i class="fas fa-vial mr-2"></i>Test API Key';
     });
 }
+
+// Referral System Toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.getElementById('referral-toggle');
+    const statusText = document.getElementById('referral-status-text');
+    const systemStatus = document.getElementById('system-status-display');
+    
+    if (toggle) {
+        toggle.addEventListener('change', function() {
+            const isEnabled = this.checked;
+            statusText.textContent = isEnabled ? 'Enabled' : 'Disabled';
+            
+            if (systemStatus) {
+                systemStatus.innerHTML = isEnabled 
+                    ? '<span class="text-green-600">● Active</span>' 
+                    : '<span class="text-red-600">● Inactive</span>';
+            }
+            
+            // Toggle styling
+            const toggleBg = this.parentElement.querySelector('.block');
+            const toggleDot = this.parentElement.querySelector('.dot');
+            
+            if (isEnabled) {
+                toggleBg.classList.remove('bg-gray-300');
+                toggleBg.classList.add('bg-green-500');
+                toggleDot.style.transform = 'translateX(1.5rem)';
+            } else {
+                toggleBg.classList.remove('bg-green-500');
+                toggleBg.classList.add('bg-gray-300');
+                toggleDot.style.transform = 'translateX(0)';
+            }
+        });
+        
+        // Set initial state
+        if (toggle.checked) {
+            const toggleBg = toggle.parentElement.querySelector('.block');
+            const toggleDot = toggle.parentElement.querySelector('.dot');
+            toggleBg.classList.remove('bg-gray-300');
+            toggleBg.classList.add('bg-green-500');
+            toggleDot.style.transform = 'translateX(1.5rem)';
+        }
+    }
+    
+    // Update preview values
+    const referrerInput = document.getElementById('referrer-coins');
+    const newUserInput = document.getElementById('new-user-coins');
+    
+    if (referrerInput) {
+        referrerInput.addEventListener('input', updateReferralPreview);
+    }
+    if (newUserInput) {
+        newUserInput.addEventListener('input', updateReferralPreview);
+    }
+    
+    // Initial preview update
+    updateReferralPreview();
+});
+
+function updateReferralPreview() {
+    const referrerCoins = parseInt(document.getElementById('referrer-coins')?.value || 0);
+    const newUserCoins = parseInt(document.getElementById('new-user-coins')?.value || 0);
+    
+    // Update preview texts
+    const referrerPreviews = document.querySelectorAll('#referrer-preview, #referrer-preview-2');
+    referrerPreviews.forEach(el => el.textContent = referrerCoins);
+    
+    const newUserPreviews = document.querySelectorAll('#new-user-preview, #new-user-preview-2');
+    newUserPreviews.forEach(el => el.textContent = newUserCoins);
+    
+    // Update total cost
+    const totalCost = document.getElementById('total-cost');
+    if (totalCost) {
+        totalCost.textContent = (referrerCoins + newUserCoins) + ' coins';
+    }
+}
+
+function setPreset(type) {
+    const referrerInput = document.getElementById('referrer-coins');
+    const newUserInput = document.getElementById('new-user-coins');
+    
+    if (type === 'standard') {
+        referrerInput.value = 100;
+        newUserInput.value = 50;
+    } else if (type === 'aggressive') {
+        referrerInput.value = 300;
+        newUserInput.value = 150;
+    }
+    
+    updateReferralPreview();
+}
+
 
 </script>
 @endsection

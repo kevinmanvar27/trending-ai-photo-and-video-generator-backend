@@ -29,6 +29,9 @@ class User extends Authenticatable
         'suspension_reason',
         'total_time_spent',
         'last_activity_at',
+        'referral_code',
+        'referred_by',
+        'referral_coins',
     ];
 
     /**
@@ -110,5 +113,49 @@ class User extends Authenticatable
         $secs = $seconds % 60;
         
         return sprintf('%02d:%02d:%02d', $hours, $minutes, $secs);
+    }
+
+    /**
+     * Get the user who referred this user
+     */
+    public function referrer()
+    {
+        return $this->belongsTo(User::class, 'referred_by');
+    }
+
+    /**
+     * Get all users referred by this user
+     */
+    public function referrals()
+    {
+        return $this->hasMany(User::class, 'referred_by');
+    }
+
+    /**
+     * Get referral records where this user is the referrer
+     */
+    public function referralsMade()
+    {
+        return $this->hasMany(Referral::class, 'referrer_id');
+    }
+
+    /**
+     * Get referral record where this user was referred
+     */
+    public function referralReceived()
+    {
+        return $this->hasOne(Referral::class, 'referred_id');
+    }
+
+    /**
+     * Generate a unique referral code for the user
+     */
+    public static function generateReferralCode()
+    {
+        do {
+            $code = strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
+        } while (self::where('referral_code', $code)->exists());
+
+        return $code;
     }
 }
