@@ -197,7 +197,8 @@ class SettingController extends Controller
             }
             
             // Test the API key with a simple request
-            $apiUrl = Setting::get('grok_vision_api_url', 'https://api.x.ai/v1/chat/completions');
+            $apiUrl = Setting::get('grok_vision_api_url', config('image-prompt.grok.vision_api_url'));
+            $model = Setting::get('grok_vision_model', config('image-prompt.grok.vision_model'));
             
             $response = \Illuminate\Support\Facades\Http::timeout(30)
                 ->withHeaders([
@@ -205,7 +206,7 @@ class SettingController extends Controller
                     'Content-Type' => 'application/json',
                 ])
                 ->post($apiUrl, [
-                    'model' => 'grok-2-vision-1212',
+                    'model' => $model,
                     'messages' => [
                         [
                             'role' => 'user',

@@ -25,7 +25,7 @@ class GrokImageService
         // Get API key with priority: Database > Config > Env
         $this->apiKey = $this->getApiKey();
         $this->visionApiUrl = $this->getSettingOrConfig('grok_vision_api_url', 'image-prompt.grok.vision_api_url');
-        $this->visionModel = config('image-prompt.grok.vision_model');
+        $this->visionModel = $this->getSettingOrConfig('grok_vision_model', 'image-prompt.grok.vision_model');
         $this->imagineApiUrl = $this->getSettingOrConfig('grok_imagine_api_url', 'image-prompt.grok.imagine_api_url');
         $this->imagineModel = config('image-prompt.grok.imagine_model');
         $this->imagineSize = config('image-prompt.grok.imagine_size', '1024x1024');
