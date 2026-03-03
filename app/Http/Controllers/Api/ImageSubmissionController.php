@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\UserImageSubmission;
 use App\Models\ImagePromptTemplate;
+use App\Jobs\ProcessUserImageJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ImageSubmissionController extends Controller
 {
@@ -374,14 +376,14 @@ class ImageSubmissionController extends Controller
     /**
      * Upload image for generation (API Documentation endpoint)
      * This endpoint matches the API documentation format
+     * FIXED: Now properly dispatches the job to process image with Grok API
      */
     public function upload(Request $request)
     {
         try {
             $validator = Validator::make($request->all(), [
                 'template_id' => 'required|exists:image_prompt_templates,id',
-                'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240',
-                'custom_prompt' => 'nullable|string|max:500',
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:10240',
                 'settings' => 'nullable|json'
             ]);
 
@@ -443,11 +445,8 @@ class ImageSubmissionController extends Controller
             // Determine output type from template type (default to 'image' if not specified)
             $outputType = $template->type ?? 'image';
 
-            // Build the applied prompt (template prompt + custom prompt if provided)
+            // Use the template's prompt directly (no custom prompt allowed)
             $appliedPrompt = $template->prompt;
-            if ($request->has('custom_prompt') && !empty($request->custom_prompt)) {
-                $appliedPrompt .= ', ' . $request->custom_prompt;
-            }
 
             // Parse settings if provided
             $settings = null;
@@ -461,12 +460,21 @@ class ImageSubmissionController extends Controller
                 'template_id' => $template->id,
                 'original_image_path' => $originalPath,
                 'output_type' => $outputType,
-                'status' => 'processing',
+                'status' => 'pending',
                 'started_at' => now()
             ]);
 
             // Increment template usage
             $template->incrementUsage();
+
+            // *** FIX: Dispatch the job to actually process the image with Grok API ***
+            Log::info('Dispatching ProcessUserImageJob for submission', [
+                'submission_id' => $submission->id,
+                'template_id' => $template->id,
+                'output_type' => $outputType
+            ]);
+            
+            ProcessUserImageJob::dispatch($submission);
 
             // Generate unique generation ID
             $generationId = 'gen_' . uniqid() . substr(md5($submission->id), 0, 8);
@@ -482,9 +490,9 @@ class ImageSubmissionController extends Controller
                     'template_id' => $template->id,
                     'template_name' => $template->name,
                     'uploaded_image' => $uploadedImageUrl,
-                    'status' => 'processing',
+                    'status' => 'pending',
                     'applied_prompt' => $appliedPrompt,
-                    'estimated_time' => 30, // Default estimation
+                    'estimated_time' => $outputType === 'video' ? 120 : 30, // Video takes longer
                     'created_at' => $submission->created_at->toIso8601String(),
                     'coins_deducted' => $coinsRequired,
                     'remaining_coins' => $activeSubscription->remaining_coins
@@ -492,6 +500,11 @@ class ImageSubmissionController extends Controller
                 'message' => 'Image uploaded successfully. Generation in progress.'
             ], 200);
         } catch (\Exception $e) {
+            Log::error('Failed to upload image', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to upload image',
