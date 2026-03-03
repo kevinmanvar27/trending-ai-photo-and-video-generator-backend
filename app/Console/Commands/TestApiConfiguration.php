@@ -50,17 +50,18 @@ class TestApiConfiguration extends Command
 
         $this->line('   ✅ Grok API Key found: ' . substr($grokKey, 0, 15) . '...');
 
+        // Get model from config (database settings have priority)
+        $visionModel = config('image-prompt.grok.vision_model', 'grok-vision-beta');
+        $this->line('   📝 Using model: ' . $visionModel);
+
         try {
-            $apiUrl = config('image-prompt.grok.vision_api_url');
-            $model = config('image-prompt.grok.vision_model');
-            
             $response = Http::timeout(30)
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $grokKey,
                     'Content-Type' => 'application/json',
                 ])
-                ->post($apiUrl, [
-                    'model' => $model,
+                ->post('https://api.x.ai/v1/chat/completions', [
+                    'model' => $visionModel,
                     'messages' => [
                         [
                             'role' => 'user',

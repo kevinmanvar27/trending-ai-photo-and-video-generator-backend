@@ -98,192 +98,42 @@ class AuthController extends Controller
      */
     public function profile(Request $request)
     {
-        $user = $request->user()->load('activeSubscription.plan');
+        $user = $request->user();
+        
+        // Get active subscription
+        $activeSubscription = \App\Models\UserSubscription::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->with('plan')
+            ->first();
+
+        // Format subscription data
+        $subscriptionData = null;
+        if ($activeSubscription && $activeSubscription->isActive()) {
+            $daysRemaining = 0;
+            if ($activeSubscription->expires_at) {
+                $daysRemaining = max(0, now()->diffInDays($activeSubscription->expires_at, false));
+            }
+
+            $subscriptionData = [
+                'plan_name' => $activeSubscription->plan->name,
+                'status' => $activeSubscription->status,
+                'expires_at' => $activeSubscription->expires_at,
+                'days_remaining' => $daysRemaining,
+                'remaining_coins' => $activeSubscription->remaining_coins,
+            ];
+        }
 
         return response()->json([
             'success' => true,
-            'data' => $user,
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone ?? null,
+                'avatar' => null, // Add avatar URL if you have avatar field
+                'created_at' => $user->created_at,
+                'subscription' => $subscriptionData,
+            ],
         ]);
-    }
-
-    /**
-     * Update user profile
-     */
-    public function updateProfile(Request $request)
-    {
-        $user = $request->user();
-
-        // Build validation rules
-        $rules = [
-            'name' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:8|confirmed',
-        ];
-
-        // Validate the request
-        $request->validate($rules);
-
-        try {
-            // Update name if provided
-            if ($request->has('name') && $request->name !== null) {
-                $user->name = $request->name;
-            }
-
-            // Update email if provided
-            if ($request->has('email') && $request->email !== null) {
-                $user->email = $request->email;
-            }
-
-            // Update password if provided
-            if ($request->has('password') && $request->password !== null) {
-                $user->password = Hash::make($request->password);
-            }
-
-            // Save the user
-            $user->save();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Profile updated successfully',
-                'data' => [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                ],
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to update profile',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Delete user account (GET method)
-     */
-    public function deleteAccount(Request $request)
-    {
-        try {
-            $user = $request->user();
-            
-            // Store user info before deletion
-            $userName = $user->name;
-            $userEmail = $user->email;
-            
-            // Delete all user's tokens
-            $user->tokens()->delete();
-            
-            // Delete user's related data (optional - uncomment if needed)
-            // $user->contacts()->delete();
-            // $user->activitySessions()->delete();
-            // $user->subscriptions()->delete();
-            // $user->imageSubmissions()->delete();
-            
-            // Delete the user
-            $user->delete();
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Account deleted successfully',
-                'data' => [
-                    'deleted_user' => [
-                        'name' => $userName,
-                        'email' => $userEmail,
-                    ],
-                ],
-            ], 200);
-            
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete account',
-                'error' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    /**
-     * Delete user account via GET with email and password
-     */
-    public function deleteAccountViaCredentials(Request $request)
-    {
-        // Get email and password from query parameters
-        $email = $request->query('email');
-        $password = $request->query('password');
-
-        // Validate required parameters
-        if (!$email || !$password) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Email and password are required',
-                'error' => 'Please provide both email and password parameters in the URL'
-            ], 400);
-        }
-
-        try {
-            // Find user by email
-            $user = User::where('email', $email)->first();
-
-            if (!$user) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found',
-                    'error' => 'No user found with the provided email address'
-                ], 404);
-            }
-
-            // Verify password
-            if (!Hash::check($password, $user->password)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid credentials',
-                    'error' => 'The provided password is incorrect'
-                ], 401);
-            }
-
-            // Check if user is suspended
-            if ($user->isSuspended()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Account is suspended',
-                    'error' => 'Cannot delete a suspended account. Please contact support.',
-                    'reason' => $user->suspension_reason
-                ], 403);
-            }
-
-            // Store user info before deletion
-            $userName = $user->name;
-            $userEmail = $user->email;
-            $userId = $user->id;
-
-            // Delete all user's tokens
-            $user->tokens()->delete();
-
-            // Delete the user
-            $user->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Account deleted successfully',
-                'data' => [
-                    'deleted_user' => [
-                        'id' => $userId,
-                        'name' => $userName,
-                        'email' => $userEmail,
-                    ],
-                ],
-            ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete account',
-                'error' => $e->getMessage()
-            ], 500);
-        }
     }
 }

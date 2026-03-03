@@ -54,7 +54,7 @@
                         </div>
                         <div>
                             <h2 class="text-2xl font-bold text-gray-800">Processing Complete!</h2>
-                            <p class="text-gray-600">Your image has been successfully processed</p>
+                            <p class="text-gray-600">Your {{ $submission->template->type }} has been successfully processed</p>
                         </div>
                     </div>
                 @elseif($submission->status === 'failed')
@@ -65,7 +65,7 @@
                         </div>
                         <div>
                             <h2 class="text-2xl font-bold text-gray-800">Processing Failed</h2>
-                            <p class="text-gray-600">There was an error processing your image</p>
+                            <p class="text-gray-600">There was an error processing your {{ $submission->template->type }}</p>
                         </div>
                     </div>
                     @if($submission->error_message)
@@ -83,8 +83,8 @@
                             <i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i>
                         </div>
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-800">Processing Your Image...</h2>
-                            <p class="text-gray-600">This usually takes 10-30 seconds</p>
+                            <h2 class="text-2xl font-bold text-gray-800">Processing Your {{ ucfirst($submission->template->type) }}...</h2>
+                            <p class="text-gray-600">This usually takes {{ $submission->template->type == 'video' ? '30-60 seconds' : '10-30 seconds' }}</p>
                         </div>
                     </div>
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -101,7 +101,7 @@
                         </div>
                         <div>
                             <h2 class="text-2xl font-bold text-gray-800">Queued for Processing</h2>
-                            <p class="text-gray-600">Your image is in the queue and will be processed shortly</p>
+                            <p class="text-gray-600">Your {{ $submission->template->type }} is in the queue and will be processed shortly</p>
                         </div>
                     </div>
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -129,16 +129,28 @@
             <!-- Images/Videos Comparison -->
             @if($submission->status === 'completed')
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <!-- Original Image -->
+                <!-- Original Media -->
                 <div class="bg-white rounded-lg shadow-lg p-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-4">
-                        <i class="fas fa-image mr-2 text-gray-500"></i>
-                        Original Image
+                        <i class="fas fa-{{ $submission->template->type == 'video' ? 'video' : 'image' }} mr-2 text-gray-500"></i>
+                        Original {{ ucfirst($submission->template->type) }}
                     </h3>
                     <div class="border border-gray-300 rounded-lg overflow-hidden">
-                        <img src="{{ Storage::url($submission->original_image_path) }}" 
-                             alt="Original" 
-                             class="w-full h-auto">
+                        @php
+                            $originalExtension = strtolower(pathinfo($submission->original_image_path, PATHINFO_EXTENSION));
+                            $isOriginalVideo = in_array($originalExtension, ['mp4', 'mov', 'avi', 'webm']);
+                        @endphp
+                        
+                        @if($isOriginalVideo)
+                            <video controls class="w-full h-auto" preload="metadata">
+                                <source src="{{ Storage::url($submission->original_image_path) }}" type="video/{{ $originalExtension }}">
+                                Your browser does not support the video tag.
+                            </video>
+                        @else
+                            <img src="{{ Storage::url($submission->original_image_path) }}" 
+                                 alt="Original" 
+                                 class="w-full h-auto">
+                        @endif
                     </div>
                 </div>
 
@@ -195,7 +207,7 @@
                     <a href="{{ route('image-submission.create', ['template' => $submission->template_id]) }}" 
                        class="flex-1 bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-lg font-medium text-center transition-colors duration-200">
                         <i class="fas fa-redo mr-2"></i>
-                        Process Another Image
+                        Process Another {{ ucfirst($submission->template->type) }}
                     </a>
                     <a href="{{ route('image-submission.index') }}" 
                        class="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-4 rounded-lg font-medium text-center transition-colors duration-200">

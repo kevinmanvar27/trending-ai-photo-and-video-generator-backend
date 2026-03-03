@@ -26,11 +26,7 @@
 
                 <div class="mb-4">
                     <p class="text-3xl font-bold">${{ number_format($plan->price, 2) }}</p>
-                    <p class="text-sm text-gray-600">{{ $plan->formatted_duration }}</p>
-                    <p class="text-sm text-gray-600 mt-1">
-                        <i class="fas fa-coins text-yellow-500 mr-1"></i>
-                        <span class="font-semibold">{{ number_format($plan->coins ?? 0) }}</span> Coins
-                    </p>
+                    <p class="text-sm text-gray-600">{{ number_format($plan->coins) }} Coins</p>
                 </div>
 
                 @if($plan->description)

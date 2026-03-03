@@ -17,7 +17,7 @@
                         <i class="fas fa-arrow-left text-xl"></i>
                     </a>
                     <div>
-                        <h1 class="text-3xl font-bold text-gray-800">Upload Your Image</h1>
+                        <h1 class="text-3xl font-bold text-gray-800">Upload Your {{ ucfirst($template->type) }}</h1>
                         <p class="text-gray-600 mt-1">Effect: <span class="font-semibold">{{ $template->title }}</span></p>
                     </div>
                 </div>
@@ -50,9 +50,22 @@
                     
                     @if($template->reference_image_path)
                     <div class="border border-gray-300 rounded-lg overflow-hidden mb-4">
-                        <img src="{{ Storage::url($template->reference_image_path) }}" 
-                             alt="{{ $template->title }}" 
-                             class="w-full h-auto">
+                        @php
+                            $extension = strtolower(pathinfo($template->reference_image_path, PATHINFO_EXTENSION));
+                            $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm']);
+                        @endphp
+                        
+                        @if($isVideo)
+                            <video src="{{ Storage::url($template->reference_image_path) }}" 
+                                   controls
+                                   class="w-full h-auto">
+                                Your browser does not support the video tag.
+                            </video>
+                        @else
+                            <img src="{{ Storage::url($template->reference_image_path) }}" 
+                                 alt="{{ $template->title }}" 
+                                 class="w-full h-auto">
+                        @endif
                     </div>
                     @endif
 
@@ -65,8 +78,8 @@
                 <!-- Upload Form -->
                 <div class="bg-white rounded-lg shadow-lg p-6">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">
-                        <i class="fas fa-upload mr-2 text-blue-500"></i>
-                        Upload Your Image
+                        <i class="fas fa-upload mr-2 {{ $template->type == 'video' ? 'text-purple-500' : 'text-blue-500' }}"></i>
+                        Upload Your {{ ucfirst($template->type) }}
                     </h2>
 
                     @if($errors->any())
@@ -89,22 +102,29 @@
                                 <input type="file" 
                                        name="image" 
                                        id="image-input" 
-                                       accept="image/*"
+                                       accept="{{ $template->type == 'video' ? 'video/*' : 'image/*' }}"
                                        class="hidden"
                                        required
-                                       onchange="previewImage(event)">
+                                       onchange="previewMedia(event)">
                                 
                                 <label for="image-input" class="cursor-pointer">
                                     <div id="upload-prompt">
                                         <i class="fas fa-cloud-upload-alt text-gray-400 text-6xl mb-4"></i>
                                         <p class="text-gray-700 font-medium mb-2">Click to upload or drag and drop</p>
-                                        <p class="text-gray-500 text-sm">JPG, PNG, GIF, WebP (Max: 50MB)</p>
+                                        <p class="text-gray-500 text-sm">
+                                            @if($template->type == 'video')
+                                                MP4, MOV, AVI, WEBM (Max: 50MB)
+                                            @else
+                                                JPG, PNG, GIF, WebP (Max: 50MB)
+                                            @endif
+                                        </p>
                                     </div>
                                     <div id="preview-container" class="hidden">
-                                        <img id="image-preview" class="max-w-full h-auto rounded-lg mx-auto" alt="Preview">
+                                        <img id="image-preview" class="hidden max-w-full h-auto rounded-lg mx-auto" alt="Preview">
+                                        <video id="video-preview" class="hidden max-w-full h-auto rounded-lg mx-auto" controls alt="Preview"></video>
                                         <p class="text-gray-600 mt-3 text-sm">
                                             <i class="fas fa-check-circle text-green-500 mr-1"></i>
-                                            Image selected. Click to change.
+                                            {{ ucfirst($template->type) }} selected. Click to change.
                                         </p>
                                     </div>
                                 </label>
@@ -118,18 +138,18 @@
                                 What Happens Next?
                             </h3>
                             <ul class="text-sm text-blue-800 space-y-1">
-                                <li><i class="fas fa-check mr-2"></i>Your image will be uploaded securely</li>
+                                <li><i class="fas fa-check mr-2"></i>Your {{ $template->type }} will be uploaded securely</li>
                                 <li><i class="fas fa-check mr-2"></i>AI will process it with the selected effect</li>
-                                <li><i class="fas fa-check mr-2"></i>Processing typically takes 10-30 seconds</li>
+                                <li><i class="fas fa-check mr-2"></i>Processing typically takes {{ $template->type == 'video' ? '30-60 seconds' : '10-30 seconds' }}</li>
                                 <li><i class="fas fa-check mr-2"></i>You'll be able to download the result</li>
                             </ul>
                         </div>
 
                         <!-- Submit Button -->
                         <button type="submit" 
-                                class="w-full bg-blue-500 hover:bg-blue-600 text-white py-4 rounded-lg font-medium text-lg transition-colors duration-200">
+                                class="w-full {{ $template->type == 'video' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-blue-500 hover:bg-blue-600' }} text-white py-4 rounded-lg font-medium text-lg transition-colors duration-200">
                             <i class="fas fa-magic mr-2"></i>
-                            Process My Image
+                            Process My {{ ucfirst($template->type) }}
                         </button>
                     </form>
                 </div>
@@ -138,15 +158,32 @@
     </main>
 
     <script>
-        // Image preview functionality
-        function previewImage(event) {
+        // Media preview functionality (supports both image and video)
+        function previewMedia(event) {
             const file = event.target.files[0];
             if (file) {
+                const fileType = file.type;
                 const reader = new FileReader();
+                
                 reader.onload = function(e) {
                     document.getElementById('upload-prompt').classList.add('hidden');
                     document.getElementById('preview-container').classList.remove('hidden');
-                    document.getElementById('image-preview').src = e.target.result;
+                    
+                    if (fileType.startsWith('video/')) {
+                        // Show video preview
+                        const videoPreview = document.getElementById('video-preview');
+                        const imagePreview = document.getElementById('image-preview');
+                        imagePreview.classList.add('hidden');
+                        videoPreview.src = e.target.result;
+                        videoPreview.classList.remove('hidden');
+                    } else {
+                        // Show image preview
+                        const imagePreview = document.getElementById('image-preview');
+                        const videoPreview = document.getElementById('video-preview');
+                        videoPreview.classList.add('hidden');
+                        imagePreview.src = e.target.result;
+                        imagePreview.classList.remove('hidden');
+                    }
                 }
                 reader.readAsDataURL(file);
             }
@@ -173,7 +210,7 @@
             const files = e.dataTransfer.files;
             if (files.length > 0) {
                 imageInput.files = files;
-                previewImage({ target: { files: files } });
+                previewMedia({ target: { files: files } });
             }
         });
     </script>

@@ -14,12 +14,10 @@ use App\Http\Controllers\Admin\ImagePromptController;
 use App\Http\Controllers\Admin\ImagePromptTemplateController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\ImageSubmissionController;
+use App\Http\Controllers\PageController as FrontendPageController;
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
-
-// User Self-Delete Route (Public - No Auth Required)
-Route::get('/delete-my-account', [UserController::class, 'deleteAccountViaCredentialsWeb'])->name('web.user.delete');
 
 // Image Submission Routes (Frontend - for users)
 Route::get('/image-effects', [ImageSubmissionController::class, 'index'])->name('image-submission.index');
@@ -58,15 +56,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::post('users/{id}/suspend', [UserController::class, 'suspend'])->name('users.suspend');
     Route::post('users/{id}/unsuspend', [UserController::class, 'unsuspend'])->name('users.unsuspend');
     Route::get('users/{id}/activity', [UserController::class, 'activity'])->name('users.activity');
-    
-    // Delete user via GET method (URL parameter)
-    Route::get('delete-user', [UserController::class, 'deleteViaGet'])->name('users.delete-via-get');
-
-    // Deleted Users Management (Soft Delete Enhancement)
-    Route::get('deleted-users', [UserController::class, 'deletedUsers'])->name('users.deleted');
-    Route::post('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
-    Route::delete('users/{id}/force-delete', [UserController::class, 'forceDelete'])->name('users.force-delete');
-
 
     // Subscription Plans
     Route::resource('plans', SubscriptionPlanController::class);
@@ -99,3 +88,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('pages', PageController::class);
     Route::post('pages/{id}/toggle-status', [PageController::class, 'toggleStatus'])->name('pages.toggle-status');
 });
+
+// Frontend Page Routes (must be at the end to avoid conflicts)
+Route::get('/page/{slug}', [FrontendPageController::class, 'show'])->name('page.show');

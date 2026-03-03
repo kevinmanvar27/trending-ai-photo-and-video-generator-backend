@@ -11,10 +11,6 @@
             <div>
                 <h2 class="text-2xl font-bold text-gray-800 mb-2">{{ $template->title }}</h2>
                 <div class="flex items-center space-x-4 text-sm text-gray-600">
-                    <span class="inline-block px-3 py-1 {{ $template->type == 'video' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' }} rounded-full text-xs font-semibold">
-                        <i class="fas fa-{{ $template->type == 'video' ? 'video' : 'image' }} mr-1"></i>
-                        {{ ucfirst($template->type) }}
-                    </span>
                     <span>
                         <i class="fas fa-calendar mr-1"></i>
                         Created {{ $template->created_at->format('M d, Y') }}
@@ -25,23 +21,14 @@
                     </span>
                 </div>
             </div>
-            <div class="text-right">
+            <div>
                 @if($template->is_active)
-                    <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium block mb-2">
+                    <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                         <i class="fas fa-check-circle mr-1"></i> Active
                     </span>
                 @else
-                    <span class="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium block mb-2">
+                    <span class="px-4 py-2 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
                         <i class="fas fa-times-circle mr-1"></i> Inactive
-                    </span>
-                @endif
-                @if($template->coins_required > 0)
-                    <span class="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium block">
-                        <i class="fas fa-coins mr-1"></i> {{ $template->coins_required }} coins
-                    </span>
-                @else
-                    <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium block">
-                        <i class="fas fa-gift mr-1"></i> Free
                     </span>
                 @endif
             </div>
@@ -55,15 +42,29 @@
         </div>
         @endif
 
-        <!-- Reference Image -->
+        <!-- Reference Media -->
         @if($template->reference_image_path)
         <div class="mb-6">
-            <h3 class="text-sm font-medium text-gray-700 mb-3">Reference Image</h3>
+            <h3 class="text-sm font-medium text-gray-700 mb-3">Reference Media</h3>
             <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
-                <img src="{{ Storage::url($template->reference_image_path) }}" 
-                     alt="{{ $template->title }}" 
-                     class="max-w-full h-auto rounded-lg mx-auto"
-                     style="max-height: 500px;">
+                @php
+                    $extension = strtolower(pathinfo($template->reference_image_path, PATHINFO_EXTENSION));
+                    $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm']);
+                @endphp
+                
+                @if($isVideo)
+                    <video src="{{ Storage::url($template->reference_image_path) }}" 
+                           controls
+                           class="max-w-full h-auto rounded-lg mx-auto"
+                           style="max-height: 500px;">
+                        Your browser does not support the video tag.
+                    </video>
+                @else
+                    <img src="{{ Storage::url($template->reference_image_path) }}" 
+                         alt="{{ $template->title }}" 
+                         class="max-w-full h-auto rounded-lg mx-auto"
+                         style="max-height: 500px;">
+                @endif
             </div>
         </div>
         @endif

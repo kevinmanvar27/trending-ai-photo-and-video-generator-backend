@@ -98,7 +98,7 @@
                     <tr class="border-b">
                         <th class="text-left py-2">User</th>
                         <th class="text-left py-2">Plan</th>
-                        <th class="text-left py-2">Expires</th>
+                        <th class="text-left py-2">Coins/Expires</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -106,7 +106,13 @@
                         <tr class="border-b">
                             <td class="py-2">{{ $subscription->user->name }}</td>
                             <td class="py-2">{{ $subscription->plan->name }}</td>
-                            <td class="py-2">{{ $subscription->expires_at->diffForHumans() }}</td>
+                            <td class="py-2">
+                                @if($subscription->expires_at)
+                                    {{ $subscription->expires_at->diffForHumans() }}
+                                @else
+                                    <span class="text-green-600 font-semibold">{{ number_format($subscription->remaining_coins) }}</span> coins left
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>

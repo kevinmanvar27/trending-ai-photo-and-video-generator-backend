@@ -31,14 +31,29 @@
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     @forelse($templates as $template)
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <!-- Reference Image -->
+            <!-- Reference Image/Video -->
             <div class="h-48 bg-gray-200 flex items-center justify-center overflow-hidden">
                 @if($template->reference_image_path)
-                    <img src="{{ $template->reference_image_url }}" alt="{{ $template->title }}" class="w-full h-full object-cover">
+                    @php
+                        $extension = strtolower(pathinfo($template->reference_image_path, PATHINFO_EXTENSION));
+                        $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm']);
+                    @endphp
+                    
+                    @if($isVideo)
+                        <video src="{{ $template->reference_image_url }}" 
+                               class="w-full h-full object-cover"
+                               muted
+                               loop
+                               onmouseover="this.play()" 
+                               onmouseout="this.pause()">
+                        </video>
+                    @else
+                        <img src="{{ $template->reference_image_url }}" alt="{{ $template->title }}" class="w-full h-full object-cover">
+                    @endif
                 @else
                     <div class="text-center text-gray-400">
-                        <i class="fas fa-image text-6xl mb-2"></i>
-                        <p class="text-sm">No reference image</p>
+                        <i class="fas fa-{{ $template->type == 'video' ? 'video' : 'image' }} text-6xl mb-2"></i>
+                        <p class="text-sm">No reference {{ $template->type }}</p>
                     </div>
                 @endif
             </div>
@@ -79,19 +94,6 @@
                 <div class="flex items-center justify-between text-sm text-gray-500 mb-3">
                     <span><i class="fas fa-users mr-1"></i> {{ $template->submissions_count }} uses</span>
                     <span><i class="fas fa-clock mr-1"></i> {{ $template->created_at->diffForHumans() }}</span>
-                </div>
-
-                <!-- Coins Required -->
-                <div class="flex items-center text-sm mb-3">
-                    @if($template->coins_required > 0)
-                        <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
-                            <i class="fas fa-coins mr-1"></i> {{ $template->coins_required }} coins
-                        </span>
-                    @else
-                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
-                            <i class="fas fa-gift mr-1"></i> Free
-                        </span>
-                    @endif
                 </div>
 
                 <!-- Actions -->

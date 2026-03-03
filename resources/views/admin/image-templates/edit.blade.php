@@ -76,67 +76,62 @@
                 <p class="text-sm text-gray-500 mt-1">This will be shown to users when they browse templates</p>
             </div>
 
-            <!-- Coins Required -->
-            <div class="mb-6">
-                <label for="coins_required" class="block text-sm font-medium text-gray-700 mb-2">
-                    Coins Required
-                </label>
-                <input type="number" 
-                       name="coins_required" 
-                       id="coins_required" 
-                       value="{{ old('coins_required', $template->coins_required ?? 0) }}"
-                       min="0"
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('coins_required') border-red-500 @enderror" 
-                       placeholder="0">
-                @error('coins_required')
-                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
-                @enderror
-                <p class="text-sm text-gray-500 mt-1">
-                    <i class="fas fa-coins mr-1 text-yellow-500"></i>
-                    Number of coins users need to use this template (0 = free)
-                </p>
-            </div>
-
-            <!-- Current Reference Image -->
+            <!-- Current Reference Media -->
             @if($template->reference_image_path)
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Current Reference Image
+                    Current Reference Media
                 </label>
                 <div class="border border-gray-300 rounded-lg p-4 bg-gray-50">
-                    <img src="{{ Storage::url($template->reference_image_path) }}" 
-                         alt="Current reference" 
-                         class="max-w-full h-auto rounded-lg mx-auto"
-                         style="max-height: 300px;">
+                    @php
+                        $filePath = Storage::url($template->reference_image_path);
+                        $extension = strtolower(pathinfo($template->reference_image_path, PATHINFO_EXTENSION));
+                        $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm']);
+                    @endphp
+                    
+                    @if($isVideo)
+                        <video src="{{ $filePath }}" 
+                               controls
+                               class="max-w-full h-auto rounded-lg mx-auto"
+                               style="max-height: 300px;">
+                            Your browser does not support the video tag.
+                        </video>
+                    @else
+                        <img src="{{ $filePath }}" 
+                             alt="Current reference" 
+                             class="max-w-full h-auto rounded-lg mx-auto"
+                             style="max-height: 300px;">
+                    @endif
                 </div>
             </div>
             @endif
 
-            <!-- New Reference Image -->
+            <!-- New Reference Media -->
             <div class="mb-6">
                 <label for="reference_image" class="block text-sm font-medium text-gray-700 mb-2">
-                    {{ $template->reference_image_path ? 'Replace Reference Image (Optional)' : 'Reference Image' }}
+                    {{ $template->reference_image_path ? 'Replace Reference Media (Optional)' : 'Reference Media (Image or Video)' }}
                 </label>
                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                     <input type="file" 
                            name="reference_image" 
                            id="reference_image" 
-                           accept="image/*"
+                           accept="image/*,video/*"
                            class="hidden"
-                           onchange="previewImage(event)">
+                           onchange="previewMedia(event)">
                     <label for="reference_image" class="cursor-pointer">
                         <div id="preview-container">
                             <i class="fas fa-cloud-upload-alt text-gray-400 text-5xl mb-2"></i>
-                            <p class="text-gray-600">Click to {{ $template->reference_image_path ? 'replace' : 'upload' }} reference image</p>
-                            <p class="text-sm text-gray-500 mt-2">Show users how their image will look after applying this effect</p>
+                            <p class="text-gray-600">Click to {{ $template->reference_image_path ? 'replace' : 'upload' }} reference media</p>
+                            <p class="text-sm text-gray-500 mt-2">Show users how their media will look after applying this effect</p>
                         </div>
                         <img id="image-preview" class="hidden max-w-full h-auto rounded-lg mx-auto" alt="Preview">
+                        <video id="video-preview" class="hidden max-w-full h-auto rounded-lg mx-auto" controls alt="Preview"></video>
                     </label>
                 </div>
                 @error('reference_image')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
-                <p class="text-sm text-gray-500 mt-1">Supported: JPG, PNG, GIF (Max: 10MB)</p>
+                <p class="text-sm text-gray-500 mt-1">Supported: JPG, PNG, GIF, MP4, MOV, AVI, WEBM (Max: 50MB)</p>
             </div>
 
             <!-- Prompt -->
@@ -207,15 +202,30 @@
 </div>
 
 <script>
-function previewImage(event) {
+function previewMedia(event) {
     const file = event.target.files[0];
     if (file) {
+        const fileType = file.type;
         const reader = new FileReader();
+        
         reader.onload = function(e) {
             document.getElementById('preview-container').classList.add('hidden');
-            const preview = document.getElementById('image-preview');
-            preview.src = e.target.result;
-            preview.classList.remove('hidden');
+            
+            if (fileType.startsWith('video/')) {
+                // Show video preview
+                const videoPreview = document.getElementById('video-preview');
+                const imagePreview = document.getElementById('image-preview');
+                imagePreview.classList.add('hidden');
+                videoPreview.src = e.target.result;
+                videoPreview.classList.remove('hidden');
+            } else {
+                // Show image preview
+                const imagePreview = document.getElementById('image-preview');
+                const videoPreview = document.getElementById('video-preview');
+                videoPreview.classList.add('hidden');
+                imagePreview.src = e.target.result;
+                imagePreview.classList.remove('hidden');
+            }
         }
         reader.readAsDataURL(file);
     }

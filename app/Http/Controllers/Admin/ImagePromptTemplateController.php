@@ -40,10 +40,9 @@ class ImagePromptTemplateController extends Controller
             'title' => 'required|string|max:255',
             'type' => 'required|in:image,video',
             'description' => 'nullable|string|max:1000',
-            'reference_image' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:10240', // 10MB
+            'reference_image' => 'nullable|file|mimes:jpeg,jpg,png,gif,mp4,mov,avi,webm|max:51200', // 50MB for videos
             'prompt' => 'required|string|max:2000',
             'is_active' => 'boolean',
-            'coins_required' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -53,7 +52,7 @@ class ImagePromptTemplateController extends Controller
         }
 
         try {
-            $data = $request->only(['title', 'type', 'description', 'prompt', 'coins_required']);
+            $data = $request->only(['title', 'type', 'description', 'prompt']);
             $data['is_active'] = $request->has('is_active');
 
             // Store reference image if provided
@@ -110,10 +109,9 @@ class ImagePromptTemplateController extends Controller
             'title' => 'required|string|max:255',
             'type' => 'required|in:image,video',
             'description' => 'nullable|string|max:1000',
-            'reference_image' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:10240',
+            'reference_image' => 'nullable|file|mimes:jpeg,jpg,png,gif,mp4,mov,avi,webm|max:51200',
             'prompt' => 'required|string|max:2000',
             'is_active' => 'boolean',
-            'coins_required' => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -123,7 +121,7 @@ class ImagePromptTemplateController extends Controller
         }
 
         try {
-            $data = $request->only(['title', 'type', 'description', 'prompt', 'coins_required']);
+            $data = $request->only(['title', 'type', 'description', 'prompt']);
             $data['is_active'] = $request->has('is_active');
 
             // Update reference image if provided

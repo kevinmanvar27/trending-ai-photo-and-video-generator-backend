@@ -37,10 +37,9 @@ class ProcessUserImageJob implements ShouldQueue
             $startTime = now();
             $this->submission->update(['status' => 'processing']);
 
-            Log::info('Starting image/video generation', [
+            Log::info('Starting image transformation', [
                 'submission_id' => $this->submission->id,
-                'template_id' => $this->submission->template_id,
-                'output_type' => $this->submission->output_type
+                'template_id' => $this->submission->template_id
             ]);
 
             // Get the original image path
@@ -53,56 +52,43 @@ class ProcessUserImageJob implements ShouldQueue
             // Get the transformation prompt from the template
             $prompt = $this->submission->template->prompt;
 
-            Log::info('Calling Grok API for generation', [
+            Log::info('Calling Grok Imagine for transformation', [
                 'prompt' => $prompt,
-                'image_path' => $imagePath,
-                'output_type' => $this->submission->output_type
+                'image_path' => $imagePath
             ]);
 
-            // Determine which Grok service to use based on output type
-            if ($this->submission->output_type === 'video') {
-                // Generate video from image
-                $result = $grokService->generateVideoFromImage($imagePath, $prompt);
-            } else {
-                // Transform image (default)
-                $result = $grokService->transformImage($imagePath, $prompt);
-            }
+            // Use Grok Imagine to transform the image
+            $result = $grokService->transformImage($imagePath, $prompt);
 
             if (!$result['success']) {
-                throw new \Exception($result['error'] ?? 'Generation failed');
+                throw new \Exception($result['error'] ?? 'Image transformation failed');
             }
 
-            Log::info('Generation successful', [
-                'output_type' => $result['type'] ?? $this->submission->output_type,
-                'has_url' => !empty($result['image_url'] ?? $result['video_url']),
-                'has_base64' => !empty($result['image_base64'] ?? $result['video_base64'])
+            Log::info('Transformation successful', [
+                'image_url' => $result['image_url'] ?? 'none',
+                'has_base64' => !empty($result['image_base64'])
             ]);
 
-            // Determine file extension based on output type
-            $extension = ($result['type'] ?? $this->submission->output_type) === 'video' ? '.mp4' : '.png';
-            $processedFileName = 'submissions/processed/' . Str::uuid() . $extension;
+            // Save the generated image
+            $processedFileName = 'user-submissions/processed/' . Str::uuid() . '.png';
             
-            // Get the appropriate data based on type
-            $base64Data = $result['image_base64'] ?? $result['video_base64'] ?? null;
-            $url = $result['image_url'] ?? $result['video_url'] ?? null;
-            
-            if (!empty($base64Data)) {
+            if (!empty($result['image_base64'])) {
                 // Save from base64 data
-                Storage::disk('public')->put($processedFileName, base64_decode($base64Data));
-            } elseif (!empty($url)) {
+                Storage::disk('public')->put($processedFileName, base64_decode($result['image_base64']));
+            } elseif (!empty($result['image_url'])) {
                 // Download from URL
-                $content = file_get_contents($url);
-                if ($content === false) {
-                    throw new \Exception('Failed to download generated content from URL');
+                $imageContent = file_get_contents($result['image_url']);
+                if ($imageContent === false) {
+                    throw new \Exception('Failed to download generated image from URL');
                 }
-                Storage::disk('public')->put($processedFileName, $content);
+                Storage::disk('public')->put($processedFileName, $imageContent);
             } else {
-                throw new \Exception('No data returned from Grok API');
+                throw new \Exception('No image data returned from Grok Imagine');
             }
 
             $processingTime = now()->diffInSeconds($startTime);
 
-            Log::info('Content saved successfully', [
+            Log::info('Image saved successfully', [
                 'processed_path' => $processedFileName,
                 'processing_time' => $processingTime
             ]);
@@ -111,13 +97,12 @@ class ProcessUserImageJob implements ShouldQueue
             $this->submission->update([
                 'processed_image_path' => $processedFileName,
                 'status' => 'completed',
-                'completed_at' => now(),
                 'processing_time' => $processingTime,
                 'error_message' => null, // Clear any previous errors
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Generation failed', [
+            Log::error('Image transformation failed', [
                 'submission_id' => $this->submission->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -125,7 +110,7 @@ class ProcessUserImageJob implements ShouldQueue
 
             $this->submission->update([
                 'status' => 'failed',
-                'error_message' => substr($e->getMessage(), 0, 1000), // Limit error message length
+                'error_message' => $e->getMessage(),
             ]);
 
             throw $e;

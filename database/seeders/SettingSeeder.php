@@ -79,8 +79,32 @@ class SettingSeeder extends Seeder
                 'group' => 'api'
             ],
             [
+                'key' => 'grok_vision_model',
+                'value' => 'grok-3',
+                'type' => 'text',
+                'group' => 'api'
+            ],
+            [
                 'key' => 'grok_imagine_api_url',
                 'value' => 'https://api.x.ai/v1/images/generations',
+                'type' => 'text',
+                'group' => 'api'
+            ],
+            [
+                'key' => 'grok_imagine_model',
+                'value' => 'grok-imagine-image',
+                'type' => 'text',
+                'group' => 'api'
+            ],
+            [
+                'key' => 'grok_imagine_size',
+                'value' => '1024x1024',
+                'type' => 'text',
+                'group' => 'api'
+            ],
+            [
+                'key' => 'grok_imagine_quality',
+                'value' => 'high',
                 'type' => 'text',
                 'group' => 'api'
             ],
@@ -88,6 +112,30 @@ class SettingSeeder extends Seeder
                 'key' => 'grok_video_api_url',
                 'value' => 'https://api.x.ai/v1/videos/generations',
                 'type' => 'text',
+                'group' => 'api'
+            ],
+            [
+                'key' => 'grok_video_model',
+                'value' => 'grok-imagine-video',
+                'type' => 'text',
+                'group' => 'api'
+            ],
+            [
+                'key' => 'grok_video_duration',
+                'value' => '5',
+                'type' => 'number',
+                'group' => 'api'
+            ],
+            [
+                'key' => 'grok_video_fps',
+                'value' => '24',
+                'type' => 'number',
+                'group' => 'api'
+            ],
+            [
+                'key' => 'grok_max_tokens',
+                'value' => '2000',
+                'type' => 'number',
                 'group' => 'api'
             ],
             [

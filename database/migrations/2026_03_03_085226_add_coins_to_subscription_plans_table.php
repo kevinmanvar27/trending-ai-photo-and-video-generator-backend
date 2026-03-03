@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('subscription_plans', function (Blueprint $table) {
-            $table->integer('coins')->default(0)->after('duration_value');
+            // Remove duration fields (coins field already exists)
+            $table->dropColumn(['duration_type', 'duration_value']);
         });
     }
 
@@ -22,7 +23,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('subscription_plans', function (Blueprint $table) {
-            $table->dropColumn('coins');
+            // Add back duration fields
+            $table->enum('duration_type', ['daily', 'weekly', 'monthly', 'yearly'])->after('price');
+            $table->integer('duration_value')->default(1)->after('duration_type');
         });
     }
 };

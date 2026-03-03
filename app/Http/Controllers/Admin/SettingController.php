@@ -44,7 +44,14 @@ class SettingController extends Controller
             'grok_vision_api_url' => 'nullable|url|max:500',
             'grok_vision_model' => 'nullable|string|max:100',
             'grok_imagine_api_url' => 'nullable|url|max:500',
+            'grok_imagine_model' => 'nullable|string|max:100',
+            'grok_imagine_size' => 'nullable|string|max:50',
+            'grok_imagine_quality' => 'nullable|string|max:50',
             'grok_video_api_url' => 'nullable|url|max:500',
+            'grok_video_model' => 'nullable|string|max:100',
+            'grok_video_duration' => 'nullable|integer|min:1|max:60',
+            'grok_video_fps' => 'nullable|integer|min:1|max:60',
+            'grok_max_tokens' => 'nullable|integer|min:100|max:10000',
             'grok_timeout' => 'nullable|integer|min:30|max:600',
         ]);
 
@@ -89,7 +96,14 @@ class SettingController extends Controller
             'grok_vision_api_url' => ['type' => 'text', 'group' => 'api'],
             'grok_vision_model' => ['type' => 'text', 'group' => 'api'],
             'grok_imagine_api_url' => ['type' => 'text', 'group' => 'api'],
+            'grok_imagine_model' => ['type' => 'text', 'group' => 'api'],
+            'grok_imagine_size' => ['type' => 'text', 'group' => 'api'],
+            'grok_imagine_quality' => ['type' => 'text', 'group' => 'api'],
             'grok_video_api_url' => ['type' => 'text', 'group' => 'api'],
+            'grok_video_model' => ['type' => 'text', 'group' => 'api'],
+            'grok_video_duration' => ['type' => 'number', 'group' => 'api'],
+            'grok_video_fps' => ['type' => 'number', 'group' => 'api'],
+            'grok_max_tokens' => ['type' => 'number', 'group' => 'api'],
             'grok_timeout' => ['type' => 'number', 'group' => 'api'],
         ];
 
@@ -118,8 +132,29 @@ class SettingController extends Controller
         if ($request->has('grok_imagine_api_url')) {
             $envData['GROK_IMAGINE_API_URL'] = $request->input('grok_imagine_api_url');
         }
+        if ($request->has('grok_imagine_model')) {
+            $envData['GROK_IMAGINE_MODEL'] = $request->input('grok_imagine_model');
+        }
+        if ($request->has('grok_imagine_size')) {
+            $envData['GROK_IMAGINE_SIZE'] = $request->input('grok_imagine_size');
+        }
+        if ($request->has('grok_imagine_quality')) {
+            $envData['GROK_IMAGINE_QUALITY'] = $request->input('grok_imagine_quality');
+        }
         if ($request->has('grok_video_api_url')) {
             $envData['GROK_VIDEO_API_URL'] = $request->input('grok_video_api_url');
+        }
+        if ($request->has('grok_video_model')) {
+            $envData['GROK_VIDEO_MODEL'] = $request->input('grok_video_model');
+        }
+        if ($request->has('grok_video_duration')) {
+            $envData['GROK_VIDEO_DURATION'] = $request->input('grok_video_duration');
+        }
+        if ($request->has('grok_video_fps')) {
+            $envData['GROK_VIDEO_FPS'] = $request->input('grok_video_fps');
+        }
+        if ($request->has('grok_max_tokens')) {
+            $envData['GROK_MAX_TOKENS'] = $request->input('grok_max_tokens');
         }
         if ($request->has('grok_timeout')) {
             $envData['GROK_TIMEOUT'] = $request->input('grok_timeout');
@@ -201,10 +236,9 @@ class SettingController extends Controller
                 ], 400);
             }
             
-            // Test the API key with a simple request (use text-only model for testing)
-            $apiUrl = Setting::get('grok_vision_api_url', config('image-prompt.grok.vision_api_url'));
-            // Use grok-beta for testing as it's a text-only model that always works
-            $testModel = 'grok-beta';
+            // Test the API key with a simple request
+            $apiUrl = Setting::get('grok_vision_api_url', 'https://api.x.ai/v1/chat/completions');
+            $visionModel = Setting::get('grok_vision_model', config('image-prompt.grok.vision_model', 'grok-vision-beta'));
             
             $response = \Illuminate\Support\Facades\Http::timeout(30)
                 ->withHeaders([
@@ -212,7 +246,7 @@ class SettingController extends Controller
                     'Content-Type' => 'application/json',
                 ])
                 ->post($apiUrl, [
-                    'model' => $testModel,
+                    'model' => $visionModel,
                     'messages' => [
                         [
                             'role' => 'user',

@@ -367,6 +367,11 @@
                     <i class="fas fa-cog mr-2"></i>Advanced API Settings
                 </h2>
 
+                <!-- Vision API Settings -->
+                <h3 class="text-lg font-semibold mb-3 text-gray-700 border-b pb-2">
+                    <i class="fas fa-eye mr-2"></i>Vision API (Image Analysis)
+                </h3>
+
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">
                         Vision API URL
@@ -378,25 +383,21 @@
                     <p class="text-gray-500 text-xs mt-1">Grok Vision API endpoint for image analysis</p>
                 </div>
 
-                <div class="mb-4">
+                <div class="mb-6">
                     <label class="block text-gray-700 text-sm font-bold mb-2">
                         Vision Model
-                        <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="grok_vision_model" 
-                        value="{{ old('grok_vision_model', $settings->get('grok_vision_model')->value ?? 'grok-3') }}"
+                        value="{{ old('grok_vision_model', $settings->get('grok_vision_model')->value ?? 'grok-vision-beta') }}"
                         class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono"
-                        placeholder="grok-3">
-                    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mt-2">
-                        <p class="text-xs text-blue-800">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            <strong>Recommended:</strong> Use <code class="bg-blue-100 px-1 rounded font-semibold">grok-3</code> for image analysis. 
-                            Grok models analyze images from public URLs. Other available models: 
-                            <code class="bg-blue-100 px-1 rounded">grok-4-0709</code>, 
-                            <code class="bg-blue-100 px-1 rounded">grok-4-fast-reasoning</code>.
-                        </p>
-                    </div>
+                        placeholder="grok-vision-beta">
+                    <p class="text-gray-500 text-xs mt-1">Model name for vision/analysis (e.g., grok-vision-beta, grok-beta, grok-2-latest)</p>
                 </div>
+
+                <!-- Imagine API Settings -->
+                <h3 class="text-lg font-semibold mb-3 text-gray-700 border-b pb-2 mt-6">
+                    <i class="fas fa-image mr-2"></i>Imagine API (Image Generation)
+                </h3>
 
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">
@@ -411,6 +412,46 @@
 
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Imagine Model
+                    </label>
+                    <input type="text" name="grok_imagine_model" 
+                        value="{{ old('grok_imagine_model', $settings->get('grok_imagine_model')->value ?? 'grok-2-latest') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono"
+                        placeholder="grok-2-latest">
+                    <p class="text-gray-500 text-xs mt-1">Model name for image generation (e.g., grok-2-latest, grok-beta)</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Image Size
+                        </label>
+                        <input type="text" name="grok_imagine_size" 
+                            value="{{ old('grok_imagine_size', $settings->get('grok_imagine_size')->value ?? '1024x1024') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="1024x1024">
+                        <p class="text-gray-500 text-xs mt-1">Default image size (e.g., 1024x1024, 512x512)</p>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Image Quality
+                        </label>
+                        <select name="grok_imagine_quality" 
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="high" {{ old('grok_imagine_quality', $settings->get('grok_imagine_quality')->value ?? 'high') == 'high' ? 'selected' : '' }}>High</option>
+                            <option value="standard" {{ old('grok_imagine_quality', $settings->get('grok_imagine_quality')->value ?? 'high') == 'standard' ? 'selected' : '' }}>Standard</option>
+                        </select>
+                        <p class="text-gray-500 text-xs mt-1">Image generation quality</p>
+                    </div>
+                </div>
+
+                <!-- Video API Settings -->
+                <h3 class="text-lg font-semibold mb-3 text-gray-700 border-b pb-2 mt-6">
+                    <i class="fas fa-video mr-2"></i>Video API (Video Generation)
+                </h3>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
                         Video API URL
                     </label>
                     <input type="text" name="grok_video_api_url" 
@@ -422,13 +463,64 @@
 
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">
-                        API Timeout (seconds)
+                        Video Model
                     </label>
-                    <input type="number" name="grok_timeout" 
-                        value="{{ old('grok_timeout', $settings->get('grok_timeout')->value ?? '180') }}"
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                        placeholder="180" min="30" max="600">
-                    <p class="text-gray-500 text-xs mt-1">Maximum time to wait for API responses (30-600 seconds)</p>
+                    <input type="text" name="grok_video_model" 
+                        value="{{ old('grok_video_model', $settings->get('grok_video_model')->value ?? 'grok-2-latest') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono"
+                        placeholder="grok-2-latest">
+                    <p class="text-gray-500 text-xs mt-1">Model name for video generation (e.g., grok-2-latest, grok-beta)</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Video Duration (seconds)
+                        </label>
+                        <input type="number" name="grok_video_duration" 
+                            value="{{ old('grok_video_duration', $settings->get('grok_video_duration')->value ?? '5') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="5" min="1" max="60">
+                        <p class="text-gray-500 text-xs mt-1">Default video duration (1-60 seconds)</p>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Video FPS
+                        </label>
+                        <input type="number" name="grok_video_fps" 
+                            value="{{ old('grok_video_fps', $settings->get('grok_video_fps')->value ?? '24') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="24" min="1" max="60">
+                        <p class="text-gray-500 text-xs mt-1">Frames per second (1-60)</p>
+                    </div>
+                </div>
+
+                <!-- General API Settings -->
+                <h3 class="text-lg font-semibold mb-3 text-gray-700 border-b pb-2 mt-6">
+                    <i class="fas fa-sliders-h mr-2"></i>General API Settings
+                </h3>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Max Tokens
+                        </label>
+                        <input type="number" name="grok_max_tokens" 
+                            value="{{ old('grok_max_tokens', $settings->get('grok_max_tokens')->value ?? '2000') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="2000" min="100" max="10000">
+                        <p class="text-gray-500 text-xs mt-1">Maximum tokens for API responses (100-10000)</p>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            API Timeout (seconds)
+                        </label>
+                        <input type="number" name="grok_timeout" 
+                            value="{{ old('grok_timeout', $settings->get('grok_timeout')->value ?? '180') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="180" min="30" max="600">
+                        <p class="text-gray-500 text-xs mt-1">Maximum time to wait for API responses (30-600 seconds)</p>
+                    </div>
                 </div>
             </div>
         </div>

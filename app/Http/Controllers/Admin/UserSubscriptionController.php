@@ -53,19 +53,13 @@ class UserSubscriptionController extends Controller
         $plan = SubscriptionPlan::findOrFail($validated['subscription_plan_id']);
         $startDate = Carbon::parse($validated['started_at']);
 
-        // Calculate expiry date based on plan duration
-        $expiryDate = match($plan->duration_type) {
-            'daily' => $startDate->copy()->addDays($plan->duration_value),
-            'weekly' => $startDate->copy()->addWeeks($plan->duration_value),
-            'monthly' => $startDate->copy()->addMonths($plan->duration_value),
-            'yearly' => $startDate->copy()->addYears($plan->duration_value),
-        };
-
+        // For coin-based plans, no expiry date is needed
+        // Subscription is active until coins run out
         UserSubscription::create([
             'user_id' => $validated['user_id'],
             'subscription_plan_id' => $validated['subscription_plan_id'],
             'started_at' => $startDate,
-            'expires_at' => $expiryDate,
+            'expires_at' => null, // No expiry for coin-based plans
             'status' => 'active',
         ]);
 
@@ -95,16 +89,10 @@ class UserSubscriptionController extends Controller
         $subscription = UserSubscription::findOrFail($id);
         $plan = $subscription->plan;
 
-        // Calculate new expiry date
-        $expiryDate = match($plan->duration_type) {
-            'daily' => now()->addDays($plan->duration_value),
-            'weekly' => now()->addWeeks($plan->duration_value),
-            'monthly' => now()->addMonths($plan->duration_value),
-            'yearly' => now()->addYears($plan->duration_value),
-        };
-
+        // For coin-based plans, renewing means reactivating the subscription
+        // No expiry date calculation needed
         $subscription->update([
-            'expires_at' => $expiryDate,
+            'expires_at' => null, // No expiry for coin-based plans
             'status' => 'active',
             'cancelled_at' => null,
         ]);

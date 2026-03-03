@@ -53,19 +53,19 @@ return [
         
         // Grok Imagine API (for image generation)
         'imagine_api_url' => getSettingOrEnv('grok_imagine_api_url', 'GROK_IMAGINE_API_URL', 'https://api.x.ai/v1/images/generations'),
-        'imagine_model' => env('GROK_IMAGINE_MODEL', 'grok-imagine-image'),
-        'imagine_size' => env('GROK_IMAGINE_SIZE', '1024x1024'),
-        'imagine_quality' => 'high',
+        'imagine_model' => getSettingOrEnv('grok_imagine_model', 'GROK_IMAGINE_MODEL', 'grok-imagine-image'),
+        'imagine_size' => getSettingOrEnv('grok_imagine_size', 'GROK_IMAGINE_SIZE', '1024x1024'),
+        'imagine_quality' => getSettingOrEnv('grok_imagine_quality', 'GROK_IMAGINE_QUALITY', 'high'),
         
         // Grok Video API (for video generation from images)
         // NOTE: This API is experimental and may require specific image URL formats
         // See VIDEO_API_STATUS.md for current status and troubleshooting
         'video_api_url' => getSettingOrEnv('grok_video_api_url', 'GROK_VIDEO_API_URL', 'https://api.x.ai/v1/videos/generations'),
-        'video_model' => env('GROK_VIDEO_MODEL', 'grok-imagine-video'),
-        'video_duration' => env('GROK_VIDEO_DURATION', 5), // seconds
-        'video_fps' => env('GROK_VIDEO_FPS', 24),
+        'video_model' => getSettingOrEnv('grok_video_model', 'GROK_VIDEO_MODEL', 'grok-imagine-video'),
+        'video_duration' => (int) getSettingOrEnv('grok_video_duration', 'GROK_VIDEO_DURATION', 5), // seconds
+        'video_fps' => (int) getSettingOrEnv('grok_video_fps', 'GROK_VIDEO_FPS', 24),
         
-        'max_tokens' => (int) env('GROK_MAX_TOKENS', 2000),
+        'max_tokens' => (int) getSettingOrEnv('grok_max_tokens', 'GROK_MAX_TOKENS', 2000),
         'timeout' => (int) getSettingOrEnv('grok_timeout', 'GROK_TIMEOUT', 180), // seconds
     ],
 

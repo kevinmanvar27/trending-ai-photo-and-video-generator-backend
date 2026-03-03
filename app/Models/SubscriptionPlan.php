@@ -13,8 +13,6 @@ class SubscriptionPlan extends Model
         'name',
         'description',
         'price',
-        'duration_type',
-        'duration_value',
         'coins',
         'features',
         'is_active',
@@ -24,7 +22,6 @@ class SubscriptionPlan extends Model
         'features' => 'array',
         'is_active' => 'boolean',
         'price' => 'decimal:2',
-        'coins' => 'integer',
     ];
 
     /**
@@ -80,13 +77,10 @@ class SubscriptionPlan extends Model
     }
 
     /**
-     * Get formatted duration
+     * Get formatted coins display
      */
-    public function getFormattedDurationAttribute(): string
+    public function getFormattedCoinsAttribute(): string
     {
-        $value = $this->duration_value;
-        $type = $this->duration_type;
-        
-        return $value . ' ' . ucfirst($type);
+        return number_format($this->coins) . ' Coins';
     }
 }

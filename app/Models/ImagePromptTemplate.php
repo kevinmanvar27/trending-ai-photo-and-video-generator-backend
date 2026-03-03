@@ -12,17 +12,16 @@ class ImagePromptTemplate extends Model
     protected $fillable = [
         'title',
         'type',
+        'coins_required',
         'description',
         'reference_image_path',
         'prompt',
         'is_active',
         'usage_count',
-        'coins_required',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'coins_required' => 'integer',
     ];
 
     /**

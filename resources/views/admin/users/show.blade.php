@@ -75,7 +75,7 @@
                     <tr>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Started</th>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Expires</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Coins</th>
                         <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                     </tr>
                 </thead>
@@ -84,7 +84,16 @@
                         <tr>
                             <td class="px-4 py-3">{{ $subscription->plan->name }}</td>
                             <td class="px-4 py-3">{{ $subscription->started_at->format('M d, Y') }}</td>
-                            <td class="px-4 py-3">{{ $subscription->expires_at->format('M d, Y') }}</td>
+                            <td class="px-4 py-3">
+                                @if($subscription->expires_at)
+                                    <!-- Legacy time-based subscription -->
+                                    <span class="text-sm">Expires: {{ $subscription->expires_at->format('M d, Y') }}</span>
+                                @else
+                                    <!-- Coin-based subscription -->
+                                    <span class="font-semibold text-green-600">{{ number_format($subscription->remaining_coins) }}</span> / {{ number_format($subscription->plan->coins) }}
+                                    <span class="text-xs text-gray-500 block">Used: {{ number_format($subscription->coins_used) }}</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3">
                                 @if($subscription->status === 'active')
                                     <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Active</span>

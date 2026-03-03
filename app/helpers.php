@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Setting;
+use App\Models\Page;
 
 if (!function_exists('setting')) {
     /**
@@ -44,5 +45,17 @@ if (!function_exists('razorpay_config')) {
         }
         
         return $config[$key] ?? null;
+    }
+}
+
+if (!function_exists('active_pages')) {
+    /**
+     * Get all active pages for navigation
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    function active_pages()
+    {
+        return Page::getActivePages();
     }
 }

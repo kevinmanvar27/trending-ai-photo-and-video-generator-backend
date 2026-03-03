@@ -31,8 +31,8 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Coins</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Started</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expires</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
@@ -47,13 +47,11 @@
                         </td>
                         <td class="px-6 py-4">{{ $subscription->plan->name }}</td>
                         <td class="px-6 py-4">${{ number_format($subscription->plan->price, 2) }}</td>
-                        <td class="px-6 py-4">{{ $subscription->started_at->format('M d, Y') }}</td>
                         <td class="px-6 py-4">
-                            {{ $subscription->expires_at->format('M d, Y') }}
-                            @if($subscription->isActive())
-                                <span class="text-xs text-gray-500">({{ $subscription->days_remaining }} days left)</span>
-                            @endif
+                            <span class="font-semibold text-green-600">{{ number_format($subscription->remaining_coins) }}</span> / {{ number_format($subscription->plan->coins) }}
+                            <span class="text-xs text-gray-500 block">Used: {{ number_format($subscription->coins_used) }}</span>
                         </td>
+                        <td class="px-6 py-4">{{ $subscription->started_at->format('M d, Y') }}</td>
                         <td class="px-6 py-4">
                             @if($subscription->status === 'active' && !$subscription->isExpired())
                                 <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Active</span>

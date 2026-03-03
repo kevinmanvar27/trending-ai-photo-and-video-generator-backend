@@ -15,15 +15,14 @@ class UserSubscription extends Model
         'started_at',
         'expires_at',
         'status',
-        'cancelled_at',
         'coins_used',
+        'cancelled_at',
     ];
 
     protected $casts = [
         'started_at' => 'datetime',
         'expires_at' => 'datetime',
         'cancelled_at' => 'datetime',
-        'coins_used' => 'integer',
     ];
 
     /**
@@ -47,7 +46,18 @@ class UserSubscription extends Model
      */
     public function isActive(): bool
     {
-        return $this->status === 'active' && $this->expires_at > now();
+        // For coin-based system: active if status is active and has remaining coins
+        if ($this->status !== 'active') {
+            return false;
+        }
+        
+        // If expires_at is set (legacy), check expiry
+        if ($this->expires_at) {
+            return $this->expires_at > now();
+        }
+        
+        // For coin-based: check if coins are remaining
+        return $this->getRemainingCoinsAttribute() > 0;
     }
 
     /**
@@ -55,19 +65,18 @@ class UserSubscription extends Model
      */
     public function isExpired(): bool
     {
-        return $this->expires_at <= now();
-    }
-
-    /**
-     * Get days remaining
-     */
-    public function getDaysRemainingAttribute(): int
-    {
-        if ($this->isExpired()) {
-            return 0;
+        // For coin-based system: expired if no coins remaining or status is not active
+        if ($this->status !== 'active') {
+            return true;
         }
         
-        return now()->diffInDays($this->expires_at);
+        // If expires_at is set (legacy), check expiry
+        if ($this->expires_at) {
+            return $this->expires_at <= now();
+        }
+        
+        // For coin-based: check if no coins remaining
+        return $this->getRemainingCoinsAttribute() <= 0;
     }
 
     /**
@@ -75,32 +84,22 @@ class UserSubscription extends Model
      */
     public function getRemainingCoinsAttribute(): int
     {
-        if (!$this->isActive()) {
+        if (!$this->plan) {
             return 0;
         }
         
         $totalCoins = $this->plan->coins ?? 0;
-        return max(0, $totalCoins - $this->coins_used);
+        $usedCoins = $this->coins_used ?? 0;
+        
+        return max(0, $totalCoins - $usedCoins);
     }
 
     /**
-     * Use coins from subscription
+     * Get days remaining (for backward compatibility)
      */
-    public function useCoins(int $amount): bool
+    public function getDaysRemainingAttribute(): int
     {
-        if ($this->remaining_coins < $amount) {
-            return false;
-        }
-
-        $this->increment('coins_used', $amount);
-        return true;
-    }
-
-    /**
-     * Check if user has enough coins
-     */
-    public function hasEnoughCoins(int $amount): bool
-    {
-        return $this->remaining_coins >= $amount;
+        // For coin-based system, return coins remaining instead
+        return $this->getRemainingCoinsAttribute();
     }
 }

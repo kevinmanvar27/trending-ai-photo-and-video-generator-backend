@@ -50,9 +50,14 @@ class ImageSubmissionController extends Controller
         $template = ImagePromptTemplate::where('is_active', true)
             ->findOrFail($templateId);
 
-        $validator = Validator::make($request->all(), [
-            'image' => 'required|image|mimes:jpeg,jpg,png,gif|max:10240', // 10MB
-        ]);
+        // Dynamic validation based on template type
+        $validationRules = [
+            'image' => $template->type == 'video' 
+                ? 'required|file|mimes:mp4,mov,avi,webm|max:51200' // 50MB for videos
+                : 'required|image|mimes:jpeg,jpg,png,gif,webp|max:10240', // 10MB for images
+        ];
+
+        $validator = Validator::make($request->all(), $validationRules);
 
         if ($validator->fails()) {
             return back()
@@ -250,5 +255,13 @@ class ImageSubmissionController extends Controller
                 'completed_at' => now()
             ]);
         }
+    }
+
+    /**
+     * Process image for API (public method for job access)
+     */
+    public function processImageForApi(UserImageSubmission $submission)
+    {
+        return $this->processImage($submission);
     }
 }

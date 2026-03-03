@@ -30,7 +30,6 @@ class TrackUserActivity
                 ->first();
             
             if (!$existingLog) {
-                // Create new session log
                 UserActivityLog::create([
                     'user_id' => $user->id,
                     'session_start' => now(),
@@ -38,10 +37,6 @@ class TrackUserActivity
                     'user_agent' => $request->userAgent(),
                     'device_type' => $this->getDeviceType($request),
                 ]);
-            } else {
-                // Update the existing log's last activity time if needed
-                // This helps track if session is still active
-                $existingLog->touch();
             }
         }
 

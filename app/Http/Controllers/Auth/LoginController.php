@@ -29,21 +29,12 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
 
-            // Get user instance before any logout
-            $user = Auth::user();
-            
-            // Check if user exists and is suspended
-            if ($user && $user->isSuspended()) {
-                // Store suspension reason before logout
-                $suspensionReason = $user->suspension_reason ?? 'No reason provided';
-                
+            // Check if user is suspended
+            if (Auth::user()->isSuspended()) {
                 Auth::logout();
-                $request->session()->invalidate();
-                $request->session()->regenerateToken();
-                
                 return back()->withErrors([
-                    'email' => 'Your account has been suspended. Reason: ' . $suspensionReason,
-                ])->onlyInput('email');
+                    'email' => 'Your account has been suspended. Reason: ' . Auth::user()->suspension_reason,
+                ]);
             }
 
             return redirect()->intended(route('home'));
@@ -68,29 +59,14 @@ class LoginController extends Controller
                 ->first();
 
             if ($activeLog) {
-                $sessionEnd = now();
-                $sessionStart = $activeLog->session_start;
-                
-                // Calculate duration - ensure it's positive
-                $duration = abs($sessionEnd->diffInSeconds($sessionStart));
-                
-                // Only update if session_end is after session_start
-                if ($sessionEnd->gte($sessionStart)) {
-                    $activeLog->update([
-                        'session_end' => $sessionEnd,
-                        'duration' => $duration,
-                    ]);
+                $duration = now()->diffInSeconds($activeLog->session_start);
+                $activeLog->update([
+                    'session_end' => now(),
+                    'duration' => $duration,
+                ]);
 
-                    // Update user's total time spent
-                    $user->increment('total_time_spent', $duration);
-                } else {
-                    // If somehow session_end is before session_start, just mark as ended with 0 duration
-                    \Log::warning("Session end time is before start time for log ID: {$activeLog->id}");
-                    $activeLog->update([
-                        'session_end' => $sessionEnd,
-                        'duration' => 0,
-                    ]);
-                }
+                // Update user's total time spent
+                $user->increment('total_time_spent', $duration);
             }
         }
 

@@ -75,8 +75,8 @@
                     <h3 class="text-xl font-bold mb-4">Your Subscription</h3>
                     <div class="border-l-4 border-green-500 pl-4">
                         <h4 class="font-semibold text-lg">{{ $activeSubscription->plan->name }}</h4>
-                        <p class="text-gray-600">Expires: {{ $activeSubscription->expires_at->format('M d, Y') }}</p>
-                        <p class="text-sm text-gray-500">{{ $activeSubscription->days_remaining }} days remaining</p>
+                        <p class="text-gray-600">Remaining Coins: <span class="font-bold text-green-600">{{ number_format($activeSubscription->remaining_coins) }}</span></p>
+                        <p class="text-sm text-gray-500">Used: {{ number_format($activeSubscription->coins_used) }} / {{ number_format($activeSubscription->plan->coins) }} coins</p>
                     </div>
                 </div>
             @else

@@ -22,11 +22,10 @@ class Page extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'order' => 'integer'
     ];
 
     /**
-     * Boot the model
+     * Boot the model.
      */
     protected static function boot()
     {
@@ -47,18 +46,12 @@ class Page extends Model
     }
 
     /**
-     * Scope to get only active pages
+     * Get active pages
      */
-    public function scopeActive($query)
+    public static function getActivePages()
     {
-        return $query->where('is_active', true);
-    }
-
-    /**
-     * Scope to order pages
-     */
-    public function scopeOrdered($query)
-    {
-        return $query->orderBy('order', 'asc')->orderBy('title', 'asc');
+        return self::where('is_active', true)
+            ->orderBy('order')
+            ->get();
     }
 }

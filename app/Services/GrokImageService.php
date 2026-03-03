@@ -22,18 +22,28 @@ class GrokImageService
 
     public function __construct()
     {
-        // Get API key with priority: Database > Config > Env
+        // Get all settings dynamically from database with priority: Database > Config > Env
         $this->apiKey = $this->getApiKey();
         $this->visionApiUrl = $this->getSettingOrConfig('grok_vision_api_url', 'image-prompt.grok.vision_api_url');
-        $this->visionModel = $this->getSettingOrConfig('grok_vision_model', 'image-prompt.grok.vision_model');
+        $this->visionModel = $this->getSettingOrConfig('grok_vision_model', 'image-prompt.grok.vision_model', 'grok-3');
         $this->imagineApiUrl = $this->getSettingOrConfig('grok_imagine_api_url', 'image-prompt.grok.imagine_api_url');
-        $this->imagineModel = config('image-prompt.grok.imagine_model');
-        $this->imagineSize = config('image-prompt.grok.imagine_size', '1024x1024');
-        $this->imagineQuality = config('image-prompt.grok.imagine_quality', 'high');
+        $this->imagineModel = $this->getSettingOrConfig('grok_imagine_model', 'image-prompt.grok.imagine_model', 'grok-imagine-image');
+        $this->imagineSize = $this->getSettingOrConfig('grok_imagine_size', 'image-prompt.grok.imagine_size', '1024x1024');
+        $this->imagineQuality = $this->getSettingOrConfig('grok_imagine_quality', 'image-prompt.grok.imagine_quality', 'high');
         $this->videoApiUrl = $this->getSettingOrConfig('grok_video_api_url', 'image-prompt.grok.video_api_url');
-        $this->videoModel = config('image-prompt.grok.video_model', 'grok-imagine-video');
-        $this->maxTokens = config('image-prompt.grok.max_tokens', 2000);
+        $this->videoModel = $this->getSettingOrConfig('grok_video_model', 'image-prompt.grok.video_model', 'grok-imagine-video');
+        $this->maxTokens = (int) $this->getSettingOrConfig('grok_max_tokens', 'image-prompt.grok.max_tokens', 2000);
         $this->timeout = (int) $this->getSettingOrConfig('grok_timeout', 'image-prompt.grok.timeout', 180);
+        
+        Log::info('GrokImageService initialized', [
+            'api_key_set' => !empty($this->apiKey),
+            'vision_model' => $this->visionModel,
+            'imagine_model' => $this->imagineModel,
+            'video_model' => $this->videoModel,
+            'vision_url' => $this->visionApiUrl,
+            'imagine_url' => $this->imagineApiUrl,
+            'video_url' => $this->videoApiUrl
+        ]);
     }
 
     /**
@@ -82,62 +92,6 @@ class GrokImageService
         
         // Fall back to config
         return config($configKey, $default);
-    }
-
-    /**
-     * Make an image publicly accessible and return its URL
-     * 
-     * @param string $imagePath Path to the image file
-     * @return string|null Public URL of the image, or null on failure
-     */
-    protected function makeImagePubliclyAccessible(string $imagePath): ?string
-    {
-        try {
-            // Check if the file is already in public storage
-            if (strpos($imagePath, storage_path('app/public/')) === 0) {
-                // File is in public storage, generate URL
-                $relativePath = str_replace(storage_path('app/public/'), '', $imagePath);
-                return asset('storage/' . $relativePath);
-            }
-            
-            // Check if it's already a URL
-            if (filter_var($imagePath, FILTER_VALIDATE_URL)) {
-                return $imagePath;
-            }
-            
-            // Copy file to public storage temporarily
-            $filename = 'temp_vision_' . uniqid() . '_' . basename($imagePath);
-            $publicPath = 'image-prompts/temp/' . $filename;
-            
-            // Ensure directory exists
-            Storage::disk('public')->makeDirectory('image-prompts/temp');
-            
-            // Copy the file
-            $fileContents = file_get_contents($imagePath);
-            if ($fileContents === false) {
-                Log::error('Failed to read image file for public access', ['path' => $imagePath]);
-                return null;
-            }
-            
-            Storage::disk('public')->put($publicPath, $fileContents);
-            
-            // Generate public URL
-            $url = asset('storage/' . $publicPath);
-            
-            Log::info('Image made publicly accessible', [
-                'original_path' => $imagePath,
-                'public_url' => $url
-            ]);
-            
-            return $url;
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to make image publicly accessible', [
-                'error' => $e->getMessage(),
-                'path' => $imagePath
-            ]);
-            return null;
-        }
     }
 
     /**
@@ -749,18 +703,9 @@ class GrokImageService
                 throw new \Exception('Grok API key is still set to placeholder value. Please update it in Admin Settings with your actual API key from https://console.x.ai/');
             }
 
-            // xAI's Grok models require images to be accessible via public URL
-            // We need to make the image temporarily accessible
-            $imageUrl = $this->makeImagePubliclyAccessible($imagePath);
-            
-            if (!$imageUrl) {
-                throw new \Exception('Failed to make image publicly accessible');
-            }
-
-            Log::info('Grok Vision: Image made publicly accessible', ['url' => $imageUrl]);
-
-            // Use simple text prompt with URL - Grok will fetch and analyze the image
-            $fullPrompt = $prompt . "\n\nImage URL: " . $imageUrl;
+            // Read and encode the image
+            $imageData = base64_encode(file_get_contents($imagePath));
+            $mimeType = mime_content_type($imagePath);
 
             $response = Http::timeout($this->timeout)
                 ->withHeaders([
@@ -772,7 +717,18 @@ class GrokImageService
                     'messages' => [
                         [
                             'role' => 'user',
-                            'content' => $fullPrompt
+                            'content' => [
+                                [
+                                    'type' => 'text',
+                                    'text' => $prompt
+                                ],
+                                [
+                                    'type' => 'image_url',
+                                    'image_url' => [
+                                        'url' => "data:{$mimeType};base64,{$imageData}"
+                                    ]
+                                ]
+                            ]
                         ]
                     ],
                     'max_tokens' => $this->maxTokens,

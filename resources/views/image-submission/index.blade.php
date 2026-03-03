@@ -85,12 +85,27 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($imageTemplates as $template)
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                    <!-- Reference Image -->
+                    <!-- Reference Media -->
                     @if($template->reference_image_path)
                     <div class="relative h-64 bg-gray-200">
-                        <img src="{{ Storage::url($template->reference_image_path) }}" 
-                             alt="{{ $template->title }}" 
-                             class="w-full h-full object-cover">
+                        @php
+                            $extension = strtolower(pathinfo($template->reference_image_path, PATHINFO_EXTENSION));
+                            $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm']);
+                        @endphp
+                        
+                        @if($isVideo)
+                            <video src="{{ Storage::url($template->reference_image_path) }}" 
+                                   class="w-full h-full object-cover"
+                                   muted
+                                   loop
+                                   onmouseover="this.play()" 
+                                   onmouseout="this.pause()">
+                            </video>
+                        @else
+                            <img src="{{ Storage::url($template->reference_image_path) }}" 
+                                 alt="{{ $template->title }}" 
+                                 class="w-full h-full object-cover">
+                        @endif
                         <div class="absolute top-3 right-3">
                             <span class="px-3 py-1 bg-blue-500 text-white rounded-full text-xs font-medium">
                                 <i class="fas fa-magic mr-1"></i> AI Effect
@@ -136,12 +151,27 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 @foreach($videoTemplates as $template)
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                    <!-- Reference Image -->
+                    <!-- Reference Media -->
                     @if($template->reference_image_path)
                     <div class="relative h-64 bg-gray-200">
-                        <img src="{{ Storage::url($template->reference_image_path) }}" 
-                             alt="{{ $template->title }}" 
-                             class="w-full h-full object-cover">
+                        @php
+                            $extension = strtolower(pathinfo($template->reference_image_path, PATHINFO_EXTENSION));
+                            $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm']);
+                        @endphp
+                        
+                        @if($isVideo)
+                            <video src="{{ Storage::url($template->reference_image_path) }}" 
+                                   class="w-full h-full object-cover"
+                                   muted
+                                   loop
+                                   onmouseover="this.play()" 
+                                   onmouseout="this.pause()">
+                            </video>
+                        @else
+                            <img src="{{ Storage::url($template->reference_image_path) }}" 
+                                 alt="{{ $template->title }}" 
+                                 class="w-full h-full object-cover">
+                        @endif
                         <div class="absolute top-3 right-3">
                             <span class="px-3 py-1 bg-purple-500 text-white rounded-full text-xs font-medium">
                                 <i class="fas fa-video mr-1"></i> AI Effect

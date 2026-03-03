@@ -31,57 +31,26 @@
                 @enderror
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="price">
-                        Price ($)
-                    </label>
-                    <input type="number" step="0.01" name="price" id="price" value="{{ old('price') }}" required
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 @error('price') border-red-500 @enderror">
-                    @error('price')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="coins">
-                        Coins
-                    </label>
-                    <input type="number" name="coins" id="coins" value="{{ old('coins', 0) }}" required min="0"
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 @error('coins') border-red-500 @enderror">
-                    @error('coins')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="price">
+                    Price ($)
+                </label>
+                <input type="number" step="0.01" name="price" id="price" value="{{ old('price') }}" required
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 @error('price') border-red-500 @enderror">
+                @error('price')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="duration_value">
-                        Duration Value
-                    </label>
-                    <input type="number" name="duration_value" id="duration_value" value="{{ old('duration_value', 1) }}" required
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 @error('duration_value') border-red-500 @enderror">
-                    @error('duration_value')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label class="block text-gray-700 text-sm font-bold mb-2" for="duration_type">
-                        Duration Type
-                    </label>
-                    <select name="duration_type" id="duration_type" required
-                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 @error('duration_type') border-red-500 @enderror">
-                        <option value="daily" {{ old('duration_type') == 'daily' ? 'selected' : '' }}>Daily</option>
-                        <option value="weekly" {{ old('duration_type') == 'weekly' ? 'selected' : '' }}>Weekly</option>
-                        <option value="monthly" {{ old('duration_type') == 'monthly' ? 'selected' : '' }}>Monthly</option>
-                        <option value="yearly" {{ old('duration_type') == 'yearly' ? 'selected' : '' }}>Yearly</option>
-                    </select>
-                    @error('duration_type')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
+            <div class="mb-4">
+                <label class="block text-gray-700 text-sm font-bold mb-2" for="coins">
+                    Coins
+                </label>
+                <input type="number" name="coins" id="coins" value="{{ old('coins', 0) }}" required
+                    class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 @error('coins') border-red-500 @enderror">
+                @error('coins')
+                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="mb-4">

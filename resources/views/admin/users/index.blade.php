@@ -20,14 +20,9 @@
                 </button>
             </form>
         </div>
-        <div class="flex space-x-2">
-            <a href="{{ route('admin.users.deleted') }}" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
-                <i class="fas fa-trash-restore mr-1"></i> Deleted Users
-            </a>
-            <a href="{{ route('admin.users.create') }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                <i class="fas fa-plus mr-1"></i> Add User
-            </a>
-        </div>
+        <a href="{{ route('admin.users.create') }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+            <i class="fas fa-plus mr-1"></i> Add User
+        </a>
     </div>
 
     <div class="overflow-x-auto">

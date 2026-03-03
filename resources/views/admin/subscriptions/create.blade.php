@@ -36,7 +36,7 @@
                     <option value="">Select Plan</option>
                     @foreach($plans as $plan)
                         <option value="{{ $plan->id }}" {{ old('subscription_plan_id') == $plan->id ? 'selected' : '' }}>
-                            {{ $plan->name }} - ${{ number_format($plan->price, 2) }} ({{ $plan->formatted_duration }})
+                            {{ $plan->name }} - ${{ number_format($plan->price, 2) }} ({{ number_format($plan->coins) }} Coins)
                         </option>
                     @endforeach
                 </select>
