@@ -49,7 +49,7 @@ return [
         
         // Grok Vision API (for image analysis)
         'vision_api_url' => getSettingOrEnv('grok_vision_api_url', 'GROK_VISION_API_URL', 'https://api.x.ai/v1/chat/completions'),
-        'vision_model' => getSettingOrEnv('grok_vision_model', 'GROK_VISION_MODEL', 'grok-vision-beta'),
+        'vision_model' => getSettingOrEnv('grok_vision_model', 'GROK_VISION_MODEL', 'grok-3'),
         
         // Grok Imagine API (for image generation)
         'imagine_api_url' => getSettingOrEnv('grok_imagine_api_url', 'GROK_IMAGINE_API_URL', 'https://api.x.ai/v1/images/generations'),

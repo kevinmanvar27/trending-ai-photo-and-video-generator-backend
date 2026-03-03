@@ -85,6 +85,62 @@ class GrokImageService
     }
 
     /**
+     * Make an image publicly accessible and return its URL
+     * 
+     * @param string $imagePath Path to the image file
+     * @return string|null Public URL of the image, or null on failure
+     */
+    protected function makeImagePubliclyAccessible(string $imagePath): ?string
+    {
+        try {
+            // Check if the file is already in public storage
+            if (strpos($imagePath, storage_path('app/public/')) === 0) {
+                // File is in public storage, generate URL
+                $relativePath = str_replace(storage_path('app/public/'), '', $imagePath);
+                return asset('storage/' . $relativePath);
+            }
+            
+            // Check if it's already a URL
+            if (filter_var($imagePath, FILTER_VALIDATE_URL)) {
+                return $imagePath;
+            }
+            
+            // Copy file to public storage temporarily
+            $filename = 'temp_vision_' . uniqid() . '_' . basename($imagePath);
+            $publicPath = 'image-prompts/temp/' . $filename;
+            
+            // Ensure directory exists
+            Storage::disk('public')->makeDirectory('image-prompts/temp');
+            
+            // Copy the file
+            $fileContents = file_get_contents($imagePath);
+            if ($fileContents === false) {
+                Log::error('Failed to read image file for public access', ['path' => $imagePath]);
+                return null;
+            }
+            
+            Storage::disk('public')->put($publicPath, $fileContents);
+            
+            // Generate public URL
+            $url = asset('storage/' . $publicPath);
+            
+            Log::info('Image made publicly accessible', [
+                'original_path' => $imagePath,
+                'public_url' => $url
+            ]);
+            
+            return $url;
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to make image publicly accessible', [
+                'error' => $e->getMessage(),
+                'path' => $imagePath
+            ]);
+            return null;
+        }
+    }
+
+    /**
      * Detect if the prompt is requesting video generation
      *
      * @param string $prompt The user's prompt
@@ -693,9 +749,18 @@ class GrokImageService
                 throw new \Exception('Grok API key is still set to placeholder value. Please update it in Admin Settings with your actual API key from https://console.x.ai/');
             }
 
-            // Read and encode the image
-            $imageData = base64_encode(file_get_contents($imagePath));
-            $mimeType = mime_content_type($imagePath);
+            // xAI's Grok models require images to be accessible via public URL
+            // We need to make the image temporarily accessible
+            $imageUrl = $this->makeImagePubliclyAccessible($imagePath);
+            
+            if (!$imageUrl) {
+                throw new \Exception('Failed to make image publicly accessible');
+            }
+
+            Log::info('Grok Vision: Image made publicly accessible', ['url' => $imageUrl]);
+
+            // Use simple text prompt with URL - Grok will fetch and analyze the image
+            $fullPrompt = $prompt . "\n\nImage URL: " . $imageUrl;
 
             $response = Http::timeout($this->timeout)
                 ->withHeaders([
@@ -707,18 +772,7 @@ class GrokImageService
                     'messages' => [
                         [
                             'role' => 'user',
-                            'content' => [
-                                [
-                                    'type' => 'text',
-                                    'text' => $prompt
-                                ],
-                                [
-                                    'type' => 'image_url',
-                                    'image_url' => [
-                                        'url' => "data:{$mimeType};base64,{$imageData}"
-                                    ]
-                                ]
-                            ]
+                            'content' => $fullPrompt
                         ]
                     ],
                     'max_tokens' => $this->maxTokens,

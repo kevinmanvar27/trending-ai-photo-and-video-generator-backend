@@ -384,15 +384,16 @@
                         <span class="text-red-500">*</span>
                     </label>
                     <input type="text" name="grok_vision_model" 
-                        value="{{ old('grok_vision_model', $settings->get('grok_vision_model')->value ?? 'grok-vision-beta') }}"
+                        value="{{ old('grok_vision_model', $settings->get('grok_vision_model')->value ?? 'grok-3') }}"
                         class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono"
-                        placeholder="grok-vision-beta">
-                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mt-2">
-                        <p class="text-xs text-yellow-800">
-                            <i class="fas fa-exclamation-triangle mr-1"></i>
-                            <strong>CRITICAL:</strong> Use <code class="bg-yellow-100 px-1 rounded font-semibold">grok-vision-beta</code> for image analysis. 
-                            Regular models like <code class="bg-yellow-100 px-1 rounded">grok-3</code> or <code class="bg-yellow-100 px-1 rounded">grok-beta</code> 
-                            <strong>DO NOT support images</strong> and will cause errors.
+                        placeholder="grok-3">
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mt-2">
+                        <p class="text-xs text-blue-800">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            <strong>Recommended:</strong> Use <code class="bg-blue-100 px-1 rounded font-semibold">grok-3</code> for image analysis. 
+                            Grok models analyze images from public URLs. Other available models: 
+                            <code class="bg-blue-100 px-1 rounded">grok-4-0709</code>, 
+                            <code class="bg-blue-100 px-1 rounded">grok-4-fast-reasoning</code>.
                         </p>
                     </div>
                 </div>
