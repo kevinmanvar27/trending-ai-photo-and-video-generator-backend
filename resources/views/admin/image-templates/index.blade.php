@@ -28,107 +28,257 @@
     </div>
 @endif
 
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    @forelse($templates as $template)
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <!-- Reference Image/Video -->
-            <div class="h-48 bg-gray-200 flex items-center justify-center overflow-hidden">
-                @if($template->reference_image_path)
-                    @php
-                        $extension = strtolower(pathinfo($template->reference_image_path, PATHINFO_EXTENSION));
-                        $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm']);
-                    @endphp
-                    
-                    @if($isVideo)
-                        <video src="{{ $template->reference_image_url }}" 
-                               class="w-full h-full object-cover"
-                               muted
-                               loop
-                               onmouseover="this.play()" 
-                               onmouseout="this.pause()">
-                        </video>
-                    @else
-                        <img src="{{ $template->reference_image_url }}" alt="{{ $template->title }}" class="w-full h-full object-cover">
-                    @endif
-                @else
-                    <div class="text-center text-gray-400">
-                        <i class="fas fa-{{ $template->type == 'video' ? 'video' : 'image' }} text-6xl mb-2"></i>
-                        <p class="text-sm">No reference {{ $template->type }}</p>
-                    </div>
-                @endif
-            </div>
-
-            <!-- Template Info -->
-            <div class="p-4">
-                <div class="flex items-start justify-between mb-2">
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-900">{{ $template->title }}</h3>
-                        <span class="inline-block mt-1 px-2 py-1 {{ $template->type == 'video' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' }} rounded-full text-xs font-semibold">
-                            <i class="fas fa-{{ $template->type == 'video' ? 'video' : 'image' }} mr-1"></i>
-                            {{ ucfirst($template->type) }}
-                        </span>
-                    </div>
-                    <form action="{{ route('admin.image-templates.toggle-status', $template->id) }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="text-sm">
-                            @if($template->is_active)
-                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Active</span>
-                            @else
-                                <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold">Inactive</span>
-                            @endif
-                        </button>
-                    </form>
-                </div>
-
-                @if($template->description)
-                    <p class="text-sm text-gray-600 mb-3">{{ Str::limit($template->description, 100) }}</p>
-                @endif
-
-                <!-- Prompt Preview -->
-                <div class="bg-gray-50 rounded p-2 mb-3">
-                    <p class="text-xs text-gray-500 mb-1">Prompt:</p>
-                    <p class="text-sm text-gray-700 line-clamp-2">{{ Str::limit($template->prompt, 80) }}</p>
-                </div>
-
-                <!-- Stats -->
-                <div class="flex items-center justify-between text-sm text-gray-500 mb-3">
-                    <span><i class="fas fa-users mr-1"></i> {{ $template->submissions_count }} uses</span>
-                    <span><i class="fas fa-clock mr-1"></i> {{ $template->created_at->diffForHumans() }}</span>
-                </div>
-
-                <!-- Actions -->
-                <div class="flex space-x-2">
-                    <a href="{{ route('admin.image-templates.show', $template->id) }}" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-center py-2 rounded text-sm">
-                        <i class="fas fa-eye mr-1"></i> View
-                    </a>
-                    <a href="{{ route('admin.image-templates.edit', $template->id) }}" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white text-center py-2 rounded text-sm">
-                        <i class="fas fa-edit mr-1"></i> Edit
-                    </a>
-                    <form action="{{ route('admin.image-templates.destroy', $template->id) }}" method="POST" class="flex-1" onsubmit="return confirm('Are you sure?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded text-sm">
-                            <i class="fas fa-trash mr-1"></i> Delete
-                        </button>
-                    </form>
-                </div>
-            </div>
+<!-- Filters Section -->
+<div class="bg-white rounded-lg shadow-lg p-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Search Filter -->
+        <div>
+            <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+            <input type="text" 
+                   id="search" 
+                   name="search" 
+                   placeholder="Search templates..." 
+                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                   value="{{ request('search') }}">
         </div>
-    @empty
-        <div class="col-span-full bg-white rounded-lg shadow p-8 text-center">
-            <i class="fas fa-image text-gray-300 text-6xl mb-4"></i>
-            <p class="text-gray-500 mb-4">No templates created yet.</p>
-            <a href="{{ route('admin.image-templates.create') }}" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg inline-flex items-center">
-                <i class="fas fa-plus mr-2"></i>
-                Create Your First Template
-            </a>
+
+        <!-- Type Filter -->
+        <div>
+            <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Template Type</label>
+            <select id="type" 
+                    name="type" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <option value="">All Types</option>
+                <option value="image" {{ request('type') == 'image' ? 'selected' : '' }}>Image</option>
+                <option value="video" {{ request('type') == 'video' ? 'selected' : '' }}>Video</option>
+            </select>
         </div>
-    @endforelse
+
+        <!-- Status Filter -->
+        <div>
+            <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select id="status" 
+                    name="status" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                <option value="">All Status</option>
+                <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+            </select>
+        </div>
+
+        <!-- Filter Actions -->
+        <div class="flex items-end space-x-2">
+            <button type="button" 
+                    id="applyFilters" 
+                    class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-filter mr-1"></i> Apply
+            </button>
+            <button type="button" 
+                    id="resetFilters" 
+                    class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                <i class="fas fa-redo mr-1"></i> Reset
+            </button>
+        </div>
+    </div>
 </div>
 
-@if($templates->hasPages())
-    <div class="mt-6">
-        {{ $templates->links() }}
+<!-- Templates Grid -->
+<div id="templates-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    @include('admin.image-templates.partials.template-cards', ['templates' => $templates])
+</div>
+
+<!-- Load More Button -->
+@if($templates->hasMorePages())
+    <div class="mt-6 text-center">
+        <button type="button" 
+                id="loadMoreBtn" 
+                class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg inline-flex items-center"
+                data-page="{{ $templates->currentPage() + 1 }}">
+            <i class="fas fa-arrow-down mr-2"></i>
+            Load More Templates
+        </button>
     </div>
 @endif
+
+<!-- Loading Indicator -->
+<div id="loadingIndicator" class="mt-6 text-center hidden">
+    <div class="inline-flex items-center text-gray-600">
+        <svg class="animate-spin h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        Loading templates...
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentPage = {{ $templates->currentPage() }};
+    let isLoading = false;
+
+    // Get filter values
+    function getFilters() {
+        return {
+            search: document.getElementById('search').value,
+            type: document.getElementById('type').value,
+            status: document.getElementById('status').value
+        };
+    }
+
+    // Apply filters
+    function applyFilters() {
+        if (isLoading) return;
+        
+        isLoading = true;
+        const filters = getFilters();
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const container = document.getElementById('templates-container');
+        
+        loadingIndicator.classList.remove('hidden');
+        
+        // Build query string
+        const params = new URLSearchParams({ ...filters, page: 1 });
+        
+        fetch(`{{ route('admin.image-templates.index') }}?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            container.innerHTML = data.html;
+            currentPage = 1;
+            
+            // Update load more button
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (data.has_more) {
+                if (!loadMoreBtn) {
+                    const btnHtml = `
+                        <div class="mt-6 text-center">
+                            <button type="button" 
+                                    id="loadMoreBtn" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg inline-flex items-center"
+                                    data-page="${data.next_page}">
+                                <i class="fas fa-arrow-down mr-2"></i>
+                                Load More Templates
+                            </button>
+                        </div>
+                    `;
+                    loadingIndicator.insertAdjacentHTML('beforebegin', btnHtml);
+                    attachLoadMoreListener();
+                } else {
+                    loadMoreBtn.setAttribute('data-page', data.next_page);
+                    loadMoreBtn.closest('div').classList.remove('hidden');
+                }
+            } else if (loadMoreBtn) {
+                loadMoreBtn.closest('div').classList.add('hidden');
+            }
+            
+            loadingIndicator.classList.add('hidden');
+            isLoading = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadingIndicator.classList.add('hidden');
+            isLoading = false;
+            alert('Failed to load templates. Please try again.');
+        });
+    }
+
+    // Load more templates
+    function loadMore() {
+        if (isLoading) return;
+        
+        isLoading = true;
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const container = document.getElementById('templates-container');
+        
+        const nextPage = parseInt(loadMoreBtn.getAttribute('data-page'));
+        const filters = getFilters();
+        
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Loading...';
+        
+        // Build query string
+        const params = new URLSearchParams({ ...filters, page: nextPage });
+        
+        fetch(`{{ route('admin.image-templates.index') }}?${params.toString()}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Append new templates
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = data.html;
+            
+            // Remove empty state if exists
+            const emptyState = container.querySelector('.col-span-full');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            // Append each template card
+            Array.from(tempDiv.children).forEach(child => {
+                if (child.classList.contains('template-card')) {
+                    container.appendChild(child);
+                }
+            });
+            
+            currentPage = nextPage;
+            
+            // Update or hide load more button
+            if (data.has_more) {
+                loadMoreBtn.setAttribute('data-page', data.next_page);
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.innerHTML = '<i class="fas fa-arrow-down mr-2"></i> Load More Templates';
+            } else {
+                loadMoreBtn.closest('div').remove();
+            }
+            
+            isLoading = false;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadMoreBtn.disabled = false;
+            loadMoreBtn.innerHTML = '<i class="fas fa-arrow-down mr-2"></i> Load More Templates';
+            isLoading = false;
+            alert('Failed to load more templates. Please try again.');
+        });
+    }
+
+    // Attach load more listener
+    function attachLoadMoreListener() {
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', loadMore);
+        }
+    }
+
+    // Event listeners
+    document.getElementById('applyFilters').addEventListener('click', applyFilters);
+    
+    document.getElementById('resetFilters').addEventListener('click', function() {
+        document.getElementById('search').value = '';
+        document.getElementById('type').value = '';
+        document.getElementById('status').value = '';
+        applyFilters();
+    });
+
+    // Apply filters on Enter key in search
+    document.getElementById('search').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            applyFilters();
+        }
+    });
+
+    // Initial load more listener
+    attachLoadMoreListener();
+});
+</script>
+@endpush
 @endsection
+

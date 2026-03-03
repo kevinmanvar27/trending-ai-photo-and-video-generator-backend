@@ -16,6 +16,9 @@ class PageController extends Controller
             ->where('is_active', true)
             ->firstOrFail();
 
-        return view('pages.show', compact('page'));
+        // Get all active pages for navigation
+        $pages = Page::getActivePages();
+
+        return view('pages.show', compact('page', 'pages'));
     }
 }

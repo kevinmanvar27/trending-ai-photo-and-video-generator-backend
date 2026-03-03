@@ -3,37 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $siteTitle }} - Choose a Template</title>
+    <title>{{ setting('site_title', config('app.name')) }} - Choose a Template</title>
+    
+    @if(setting('site_favicon'))
+        <link rel="icon" type="image/x-icon" href="{{ asset('storage/' . setting('site_favicon')) }}">
+    @endif
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    @if(setting('header_code'))
+        {!! setting('header_code') !!}
+    @endif
 </head>
 <body class="bg-gray-100">
-    <!-- Header -->
-    <header class="bg-white shadow-md">
-        <div class="container mx-auto px-4 py-6">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-800">
-                        <i class="fas fa-wand-magic-sparkles mr-2 text-blue-500"></i>
-                        {{ $siteTitle }}
-                    </h1>
-                    <p class="text-gray-600 mt-2">{{ $siteDescription }}</p>
-                </div>
-                @auth
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-700">Welcome, <span class="font-semibold">{{ auth()->user()->name }}</span></span>
-                    <form action="{{ route('logout') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200">
-                            <i class="fas fa-sign-out-alt mr-2"></i>
-                            Logout
-                        </button>
-                    </form>
-                </div>
-                @endauth
-            </div>
-        </div>
-    </header>
+    @include('partials.header')
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
@@ -66,14 +50,9 @@
         </div>
 
         <!-- Templates Grid -->
-        @if($templates->count() > 0)
+        @if($imageTemplates->count() > 0 || $videoTemplates->count() > 0)
         
         <!-- Image Templates Section -->
-        @php
-            $imageTemplates = $templates->where('type', 'image');
-            $videoTemplates = $templates->where('type', 'video');
-        @endphp
-
         @if($imageTemplates->count() > 0)
         <div class="mb-12">
             <h2 class="text-2xl font-bold text-gray-800 mb-2 flex items-center">
@@ -82,12 +61,12 @@
             </h2>
             <p class="text-gray-600 mb-6">Transform your images with AI-powered effects</p>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($imageTemplates as $template)
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
                     <!-- Reference Media -->
                     @if($template->reference_image_path)
-                    <div class="relative h-64 bg-gray-200">
+                    <div class="relative h-48 bg-gray-200">
                         @php
                             $extension = strtolower(pathinfo($template->reference_image_path, PATHINFO_EXTENSION));
                             $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm']);
@@ -106,36 +85,47 @@
                                  alt="{{ $template->title }}" 
                                  class="w-full h-full object-cover">
                         @endif
-                        <div class="absolute top-3 right-3">
-                            <span class="px-3 py-1 bg-blue-500 text-white rounded-full text-xs font-medium">
-                                <i class="fas fa-magic mr-1"></i> AI Effect
+                        <div class="absolute top-2 right-2">
+                            <span class="px-2 py-1 bg-blue-500 text-white rounded-full text-xs font-medium">
+                                <i class="fas fa-magic mr-1"></i> AI
                             </span>
                         </div>
                     </div>
                     @else
-                    <div class="h-64 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-                        <i class="fas fa-image text-white text-6xl opacity-50"></i>
+                    <div class="h-48 bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                        <i class="fas fa-image text-white text-5xl opacity-50"></i>
                     </div>
                     @endif
 
                     <!-- Template Info -->
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $template->title }}</h3>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-1">{{ $template->title }}</h3>
                         
                         @if($template->description)
-                        <p class="text-gray-600 text-sm mb-4">{{ $template->description }}</p>
+                        <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ $template->description }}</p>
                         @endif
 
                         <!-- Action Button -->
                         <a href="{{ route('image-submission.create', ['template' => $template->id]) }}" 
-                           class="block w-full bg-blue-500 hover:bg-blue-600 text-white text-center py-3 rounded-lg font-medium transition-colors duration-200">
-                            <i class="fas fa-upload mr-2"></i>
+                           class="block w-full bg-blue-500 hover:bg-blue-600 text-white text-center py-2 rounded-lg font-medium transition-colors duration-200 text-sm">
+                            <i class="fas fa-upload mr-1"></i>
                             Use This Effect
                         </a>
                     </div>
                 </div>
                 @endforeach
             </div>
+
+            <!-- Load More Button -->
+            @if($hasMoreImages)
+            <div class="text-center mt-8">
+                <a href="{{ route('image-submission.image-effects') }}" 
+                   class="inline-block bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200 shadow-lg hover:shadow-xl">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Load More Image Effects
+                </a>
+            </div>
+            @endif
         </div>
         @endif
 
@@ -148,12 +138,12 @@
             </h2>
             <p class="text-gray-600 mb-6">Transform your videos with AI-powered effects</p>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 @foreach($videoTemplates as $template)
                 <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
                     <!-- Reference Media -->
                     @if($template->reference_image_path)
-                    <div class="relative h-64 bg-gray-200">
+                    <div class="relative h-48 bg-gray-200">
                         @php
                             $extension = strtolower(pathinfo($template->reference_image_path, PATHINFO_EXTENSION));
                             $isVideo = in_array($extension, ['mp4', 'mov', 'avi', 'webm']);
@@ -172,36 +162,47 @@
                                  alt="{{ $template->title }}" 
                                  class="w-full h-full object-cover">
                         @endif
-                        <div class="absolute top-3 right-3">
-                            <span class="px-3 py-1 bg-purple-500 text-white rounded-full text-xs font-medium">
-                                <i class="fas fa-video mr-1"></i> AI Effect
+                        <div class="absolute top-2 right-2">
+                            <span class="px-2 py-1 bg-purple-500 text-white rounded-full text-xs font-medium">
+                                <i class="fas fa-video mr-1"></i> AI
                             </span>
                         </div>
                     </div>
                     @else
-                    <div class="h-64 bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
-                        <i class="fas fa-video text-white text-6xl opacity-50"></i>
+                    <div class="h-48 bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center">
+                        <i class="fas fa-video text-white text-5xl opacity-50"></i>
                     </div>
                     @endif
 
                     <!-- Template Info -->
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $template->title }}</h3>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-2 line-clamp-1">{{ $template->title }}</h3>
                         
                         @if($template->description)
-                        <p class="text-gray-600 text-sm mb-4">{{ $template->description }}</p>
+                        <p class="text-gray-600 text-sm mb-3 line-clamp-2">{{ $template->description }}</p>
                         @endif
 
                         <!-- Action Button -->
                         <a href="{{ route('image-submission.create', ['template' => $template->id]) }}" 
-                           class="block w-full bg-purple-500 hover:bg-purple-600 text-white text-center py-3 rounded-lg font-medium transition-colors duration-200">
-                            <i class="fas fa-upload mr-2"></i>
+                           class="block w-full bg-purple-500 hover:bg-purple-600 text-white text-center py-2 rounded-lg font-medium transition-colors duration-200 text-sm">
+                            <i class="fas fa-upload mr-1"></i>
                             Use This Effect
                         </a>
                     </div>
                 </div>
                 @endforeach
             </div>
+
+            <!-- Load More Button -->
+            @if($hasMoreVideos)
+            <div class="text-center mt-8">
+                <a href="{{ route('image-submission.video-effects') }}" 
+                   class="inline-block bg-purple-500 hover:bg-purple-600 text-white px-8 py-3 rounded-lg font-medium transition-colors duration-200 shadow-lg hover:shadow-xl">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Load More Video Effects
+                </a>
+            </div>
+            @endif
         </div>
         @endif
 
@@ -215,11 +216,6 @@
         @endif
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white mt-12 py-6 border-t border-gray-200">
-        <div class="container mx-auto px-4 text-center text-gray-600 text-sm">
-            <p>&copy; {{ date('Y') }} {{ $siteTitle }}. {{ $footerText }}</p>
-        </div>
-    </footer>
+    @include('partials.footer')
 </body>
 </html>

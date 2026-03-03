@@ -108,37 +108,67 @@
     </form>
 </div>
 
-<!-- TinyMCE Rich Text Editor -->
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<!-- Quill Rich Text Editor -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<style>
+    #editor-container {
+        height: 500px;
+        background-color: white;
+    }
+    .ql-editor {
+        min-height: 450px;
+    }
+</style>
 <script>
-    tinymce.init({
-        selector: '#content',
-        height: 500,
-        menubar: true,
-        plugins: [
-            'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-            'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-            'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
-        ],
-        toolbar: 'undo redo | blocks | ' +
-            'bold italic forecolor | alignleft aligncenter ' +
-            'alignright alignjustify | bullist numlist outdent indent | ' +
-            'removeformat | link image media | code | help',
-        content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }',
-        branding: false,
-        promotion: false,
-        image_advtab: true,
-        file_picker_types: 'image',
-        automatic_uploads: true,
-        images_upload_handler: function (blobInfo, success, failure) {
-            // You can implement image upload here
-            // For now, we'll use base64
-            const reader = new FileReader();
-            reader.onload = function() {
-                success(reader.result);
-            };
-            reader.readAsDataURL(blobInfo.blob());
+    document.addEventListener('DOMContentLoaded', function() {
+        // Hide the original textarea
+        const contentTextarea = document.getElementById('content');
+        contentTextarea.style.display = 'none';
+        
+        // Create editor container
+        const editorContainer = document.createElement('div');
+        editorContainer.id = 'editor-container';
+        contentTextarea.parentNode.insertBefore(editorContainer, contentTextarea);
+        
+        // Initialize Quill editor
+        const quill = new Quill('#editor-container', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    [{ 'font': [] }],
+                    [{ 'size': ['small', false, 'large', 'huge'] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'color': [] }, { 'background': [] }],
+                    [{ 'script': 'sub'}, { 'script': 'super' }],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'indent': '-1'}, { 'indent': '+1' }],
+                    [{ 'align': [] }],
+                    ['blockquote', 'code-block'],
+                    ['link', 'image', 'video'],
+                    ['clean']
+                ]
+            },
+            placeholder: 'Enter page content here...'
+        });
+        
+        // Set initial content from textarea
+        const initialContent = contentTextarea.value;
+        if (initialContent) {
+            quill.root.innerHTML = initialContent;
         }
+        
+        // Update textarea on content change
+        quill.on('text-change', function() {
+            contentTextarea.value = quill.root.innerHTML;
+        });
+        
+        // Update textarea before form submission
+        const form = contentTextarea.closest('form');
+        form.addEventListener('submit', function() {
+            contentTextarea.value = quill.root.innerHTML;
+        });
     });
 </script>
 @endsection

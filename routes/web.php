@@ -21,6 +21,8 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Image Submission Routes (Frontend - for users)
 Route::get('/image-effects', [ImageSubmissionController::class, 'index'])->name('image-submission.index');
+Route::get('/image-effects/all', [ImageSubmissionController::class, 'imageEffects'])->name('image-submission.image-effects');
+Route::get('/video-effects/all', [ImageSubmissionController::class, 'videoEffects'])->name('image-submission.video-effects');
 Route::get('/image-effects/{template}', [ImageSubmissionController::class, 'create'])->name('image-submission.create');
 Route::post('/image-effects/{template}', [ImageSubmissionController::class, 'store'])->name('image-submission.store');
 Route::get('/my-images/{submission}', [ImageSubmissionController::class, 'show'])->name('image-submission.show');

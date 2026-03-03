@@ -92,6 +92,8 @@
         </div>
     </div>
     
+    @stack('scripts')
+    
     @if(setting('footer_code'))
         {!! setting('footer_code') !!}
     @endif

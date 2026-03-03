@@ -14,11 +14,37 @@ class ImagePromptTemplateController extends Controller
     /**
      * Display a listing of templates.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $templates = ImagePromptTemplate::withCount('submissions')
-            ->latest()
-            ->paginate(15);
+        $query = ImagePromptTemplate::withCount('submissions');
+
+        // Apply filters
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('is_active', $request->status === 'active');
+        }
+
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%')
+                  ->orWhere('prompt', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $templates = $query->latest()->paginate(12);
+
+        // Return JSON for AJAX requests
+        if ($request->ajax()) {
+            return response()->json([
+                'html' => view('admin.image-templates.partials.template-cards', compact('templates'))->render(),
+                'has_more' => $templates->hasMorePages(),
+                'next_page' => $templates->currentPage() + 1
+            ]);
+        }
 
         return view('admin.image-templates.index', compact('templates'));
     }

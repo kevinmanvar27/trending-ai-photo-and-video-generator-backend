@@ -3,42 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $siteTitle }} - {{ $submission->template->title }}</title>
+    <title>{{ setting('site_title', config('app.name')) }} - {{ $submission->template->title }}</title>
+    
+    @if(setting('site_favicon'))
+        <link rel="icon" type="image/x-icon" href="{{ asset('storage/' . setting('site_favicon')) }}">
+    @endif
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    @if(setting('header_code'))
+        {!! setting('header_code') !!}
+    @endif
+    
     @if($submission->status !== 'completed' && $submission->status !== 'failed')
     <meta http-equiv="refresh" content="5">
     @endif
 </head>
 <body class="bg-gray-100">
-    <!-- Header -->
-    <header class="bg-white shadow-md">
-        <div class="container mx-auto px-4 py-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center">
-                    <a href="{{ route('image-submission.index') }}" class="text-blue-500 hover:text-blue-600 mr-4">
-                        <i class="fas fa-arrow-left text-xl"></i>
-                    </a>
-                    <div>
-                        <h1 class="text-3xl font-bold text-gray-800">Processing Result</h1>
-                        <p class="text-gray-600 mt-1">Submission #{{ $submission->id }} - {{ $submission->template->title }}</p>
-                    </div>
-                </div>
-                @auth
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-700">Welcome, <span class="font-semibold">{{ auth()->user()->name }}</span></span>
-                    <form action="{{ route('logout') }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200">
-                            <i class="fas fa-sign-out-alt mr-2"></i>
-                            Logout
-                        </button>
-                    </form>
-                </div>
-                @endauth
+    @include('partials.header')
+
+    <!-- Breadcrumb -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center text-sm text-gray-600">
+                <a href="{{ route('image-submission.index') }}" class="hover:text-blue-500">
+                    <i class="fas fa-home mr-1"></i>
+                    Home
+                </a>
+                <i class="fas fa-chevron-right mx-2 text-xs"></i>
+                <span class="text-gray-800 font-medium">Submission #{{ $submission->id }}</span>
             </div>
         </div>
-    </header>
+    </div>
 
     <!-- Main Content -->
     <main class="container mx-auto px-4 py-8">
@@ -237,11 +234,6 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-white mt-12 py-6 border-t border-gray-200">
-        <div class="container mx-auto px-4 text-center text-gray-600 text-sm">
-            <p>&copy; {{ date('Y') }} {{ $siteTitle }}. {{ $footerText }}</p>
-        </div>
-    </footer>
+    @include('partials.footer')
 </body>
 </html>

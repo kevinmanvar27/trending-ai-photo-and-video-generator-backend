@@ -127,28 +127,8 @@
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- Header -->
-    <header class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div class="flex justify-between items-center">
-                <a href="{{ route('home') }}" class="flex items-center">
-                    @if(setting('site_logo'))
-                        <img src="{{ asset('storage/' . setting('site_logo')) }}" alt="{{ setting('site_title', config('app.name')) }}" class="h-10">
-                    @else
-                        <h1 class="text-2xl font-bold text-gray-900">{{ setting('site_title', config('app.name')) }}</h1>
-                    @endif
-                </a>
-                <nav class="flex space-x-4">
-                    <a href="{{ route('home') }}" class="text-gray-600 hover:text-gray-900">Home</a>
-                    @auth
-                        <a href="{{ route('admin.dashboard') }}" class="text-gray-600 hover:text-gray-900">Dashboard</a>
-                    @else
-                        <a href="{{ route('login') }}" class="text-gray-600 hover:text-gray-900">Login</a>
-                    @endauth
-                </nav>
-            </div>
-        </div>
-    </header>
+    <!-- Include Shared Header -->
+    @include('partials.header')
 
     <!-- Main Content -->
     <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

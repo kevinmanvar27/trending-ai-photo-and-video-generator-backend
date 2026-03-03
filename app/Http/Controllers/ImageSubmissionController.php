@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ImagePromptTemplate;
 use App\Models\UserImageSubmission;
+use App\Models\Page;
 use App\Services\GrokImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -24,11 +25,92 @@ class ImageSubmissionController extends Controller
      */
     public function index()
     {
-        $templates = ImagePromptTemplate::where('is_active', true)
+        // Get only 8 templates per type for the main page
+        $imageTemplates = ImagePromptTemplate::where('is_active', true)
+            ->where('type', 'image')
             ->latest()
+            ->take(8)
             ->get();
 
-        return view('image-submission.index', compact('templates'));
+        $videoTemplates = ImagePromptTemplate::where('is_active', true)
+            ->where('type', 'video')
+            ->latest()
+            ->take(8)
+            ->get();
+
+        // Check if there are more templates
+        $hasMoreImages = ImagePromptTemplate::where('is_active', true)
+            ->where('type', 'image')
+            ->count() > 8;
+
+        $hasMoreVideos = ImagePromptTemplate::where('is_active', true)
+            ->where('type', 'video')
+            ->count() > 8;
+
+        // Get active pages for navigation
+        $pages = Page::getActivePages();
+
+        return view('image-submission.index', compact('imageTemplates', 'videoTemplates', 'hasMoreImages', 'hasMoreVideos', 'pages'));
+    }
+
+    /**
+     * Display all image effects with pagination.
+     */
+    public function imageEffects(Request $request)
+    {
+        $templates = ImagePromptTemplate::where('is_active', true)
+            ->where('type', 'image')
+            ->latest()
+            ->paginate(12);
+
+        // Get active pages for navigation
+        $pages = Page::getActivePages();
+
+        // If AJAX request, return only the template cards HTML
+        if ($request->ajax()) {
+            $html = '';
+            foreach ($templates as $template) {
+                $html .= view('image-submission.partials.template-card', compact('template'))->render();
+            }
+            
+            return response()->json([
+                'html' => $html,
+                'has_more' => $templates->hasMorePages(),
+                'next_page' => $templates->currentPage() + 1
+            ]);
+        }
+
+        return view('image-submission.image-effects', compact('templates', 'pages'));
+    }
+
+    /**
+     * Display all video effects with pagination.
+     */
+    public function videoEffects(Request $request)
+    {
+        $templates = ImagePromptTemplate::where('is_active', true)
+            ->where('type', 'video')
+            ->latest()
+            ->paginate(12);
+
+        // Get active pages for navigation
+        $pages = Page::getActivePages();
+
+        // If AJAX request, return only the template cards HTML
+        if ($request->ajax()) {
+            $html = '';
+            foreach ($templates as $template) {
+                $html .= view('image-submission.partials.template-card', compact('template'))->render();
+            }
+            
+            return response()->json([
+                'html' => $html,
+                'has_more' => $templates->hasMorePages(),
+                'next_page' => $templates->currentPage() + 1
+            ]);
+        }
+
+        return view('image-submission.video-effects', compact('templates', 'pages'));
     }
 
     /**
@@ -39,7 +121,10 @@ class ImageSubmissionController extends Controller
         $template = ImagePromptTemplate::where('is_active', true)
             ->findOrFail($templateId);
 
-        return view('image-submission.create', compact('template'));
+        // Get active pages for navigation
+        $pages = Page::getActivePages();
+
+        return view('image-submission.create', compact('template', 'pages'));
     }
 
     /**
@@ -125,11 +210,10 @@ class ImageSubmissionController extends Controller
             }
         }
 
-        // Get site settings for the view
-        $siteTitle = \App\Models\Setting::get('site_title', config('app.name', 'AI Image Effects'));
-        $footerText = \App\Models\Setting::get('footer_text', 'All rights reserved.');
+        // Get active pages for navigation
+        $pages = Page::getActivePages();
 
-        return view('image-submission.show', compact('submission', 'siteTitle', 'footerText'));
+        return view('image-submission.show', compact('submission', 'pages'));
     }
 
     /**
