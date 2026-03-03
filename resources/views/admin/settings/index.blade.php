@@ -380,6 +380,25 @@
 
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Vision Model
+                        <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" name="grok_vision_model" 
+                        value="{{ old('grok_vision_model', $settings->get('grok_vision_model')->value ?? 'grok-2-vision-1212') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline font-mono"
+                        placeholder="grok-2-vision-1212">
+                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mt-2">
+                        <p class="text-xs text-yellow-800">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            <strong>CRITICAL:</strong> Use <code class="bg-yellow-100 px-1 rounded font-semibold">grok-2-vision-1212</code> for image analysis. 
+                            Regular models like <code class="bg-yellow-100 px-1 rounded">grok-3</code> or <code class="bg-yellow-100 px-1 rounded">grok-beta</code> 
+                            <strong>DO NOT support images</strong> and will cause errors.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
                         Imagine API URL
                     </label>
                     <input type="text" name="grok_imagine_api_url" 

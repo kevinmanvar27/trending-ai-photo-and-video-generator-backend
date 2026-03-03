@@ -42,6 +42,7 @@ class SettingController extends Controller
             'address' => 'nullable|string|max:500',
             'grok_api_key' => 'nullable|string|max:255',
             'grok_vision_api_url' => 'nullable|url|max:500',
+            'grok_vision_model' => 'nullable|string|max:100',
             'grok_imagine_api_url' => 'nullable|url|max:500',
             'grok_video_api_url' => 'nullable|url|max:500',
             'grok_timeout' => 'nullable|integer|min:30|max:600',
@@ -86,6 +87,7 @@ class SettingController extends Controller
             'address' => ['type' => 'textarea', 'group' => 'general'],
             'grok_api_key' => ['type' => 'password', 'group' => 'api'],
             'grok_vision_api_url' => ['type' => 'text', 'group' => 'api'],
+            'grok_vision_model' => ['type' => 'text', 'group' => 'api'],
             'grok_imagine_api_url' => ['type' => 'text', 'group' => 'api'],
             'grok_video_api_url' => ['type' => 'text', 'group' => 'api'],
             'grok_timeout' => ['type' => 'number', 'group' => 'api'],
@@ -109,6 +111,9 @@ class SettingController extends Controller
         }
         if ($request->has('grok_vision_api_url')) {
             $envData['GROK_VISION_API_URL'] = $request->input('grok_vision_api_url');
+        }
+        if ($request->has('grok_vision_model')) {
+            $envData['GROK_VISION_MODEL'] = $request->input('grok_vision_model');
         }
         if ($request->has('grok_imagine_api_url')) {
             $envData['GROK_IMAGINE_API_URL'] = $request->input('grok_imagine_api_url');
@@ -196,9 +201,10 @@ class SettingController extends Controller
                 ], 400);
             }
             
-            // Test the API key with a simple request
+            // Test the API key with a simple request (use text-only model for testing)
             $apiUrl = Setting::get('grok_vision_api_url', config('image-prompt.grok.vision_api_url'));
-            $model = Setting::get('grok_vision_model', config('image-prompt.grok.vision_model'));
+            // Use grok-beta for testing as it's a text-only model that always works
+            $testModel = 'grok-beta';
             
             $response = \Illuminate\Support\Facades\Http::timeout(30)
                 ->withHeaders([
@@ -206,7 +212,7 @@ class SettingController extends Controller
                     'Content-Type' => 'application/json',
                 ])
                 ->post($apiUrl, [
-                    'model' => $model,
+                    'model' => $testModel,
                     'messages' => [
                         [
                             'role' => 'user',
