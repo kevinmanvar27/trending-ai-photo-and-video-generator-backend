@@ -15,19 +15,19 @@ return new class extends Migration
         // Add grok_vision_model setting with correct default value
         DB::table('settings')->insert([
             'key' => 'grok_vision_model',
-            'value' => 'grok-2-vision-1212',
+            'value' => 'grok-vision-beta',
             'type' => 'text',
             'group' => 'api',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
         
-        // Update any existing grok-3 model to grok-2-vision-1212
+        // Update any existing grok-3 or grok-2-vision-1212 to grok-vision-beta
         DB::table('settings')
             ->where('key', 'grok_vision_model')
-            ->where('value', 'grok-3')
+            ->whereIn('value', ['grok-3', 'grok-2-vision-1212'])
             ->update([
-                'value' => 'grok-2-vision-1212',
+                'value' => 'grok-vision-beta',
                 'updated_at' => now(),
             ]);
     }
