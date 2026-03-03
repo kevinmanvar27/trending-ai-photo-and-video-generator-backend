@@ -124,16 +124,34 @@
             color: inherit;
             padding: 0;
         }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen">
     <!-- Include Shared Header -->
     @include('partials.header')
 
     <!-- Main Content -->
-    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <article class="bg-white rounded-lg shadow-md p-8">
-            <h1 class="text-4xl font-bold text-gray-900 mb-6">{{ $page->title }}</h1>
+    <main class="container mx-auto px-4 lg:px-8 py-12">
+        <article class="bg-white rounded-2xl shadow-xl p-8 md:p-12 max-w-4xl mx-auto">
+            <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-6">
+                {{ $page->title }}
+            </h1>
             
             <div class="text-sm text-gray-500 mb-8">
                 <i class="far fa-clock mr-1"></i>
@@ -146,17 +164,7 @@
         </article>
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white mt-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="text-center">
-                <p>{{ setting('footer_text', '© ' . date('Y') . ' ' . setting('site_title', config('app.name')) . '. All rights reserved.') }}</p>
-            </div>
-        </div>
-    </footer>
-    
-    @if(setting('footer_code'))
-        {!! setting('footer_code') !!}
-    @endif
+    <!-- Include Professional Footer -->
+    @include('partials.footer')
 </body>
 </html>

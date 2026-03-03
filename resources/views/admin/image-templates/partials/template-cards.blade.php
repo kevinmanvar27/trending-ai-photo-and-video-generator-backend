@@ -32,7 +32,7 @@
             <div class="flex items-start justify-between mb-2">
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900">{{ $template->title }}</h3>
-                    <span class="inline-block mt-1 px-2 py-1 {{ $template->type == 'video' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' }} rounded-full text-xs font-semibold">
+                    <span class="inline-block mt-1 px-2 py-1 {{ $template->type == 'video' ? 'bg-blue-100 text-blue-800' : 'bg-blue-100 text-blue-800' }} rounded-full text-xs font-semibold">
                         <i class="fas fa-{{ $template->type == 'video' ? 'video' : 'image' }} mr-1"></i>
                         {{ ucfirst($template->type) }}
                     </span>

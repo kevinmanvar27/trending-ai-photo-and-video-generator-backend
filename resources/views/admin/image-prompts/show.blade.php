@@ -15,18 +15,6 @@
         </a>
     </div>
 
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {{ session('error') }}
-        </div>
-    @endif
-
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Original Image/Video -->
         <div class="bg-white rounded-lg shadow-lg p-6">
@@ -51,7 +39,7 @@
         <!-- Processed Result -->
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h3 class="text-lg font-semibold mb-4 flex items-center">
-                <i class="fas fa-magic mr-2 text-purple-500"></i>
+                <i class="fas fa-magic mr-2 text-blue-500"></i>
                 AI Processing Result
             </h3>
             <div class="bg-gray-100 rounded-lg p-4" style="min-height: 300px;">

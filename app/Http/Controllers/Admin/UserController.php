@@ -15,7 +15,8 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::where('role', 'user')->with(['activeSubscription.plan']);
+        // Include soft-deleted users in the query
+        $query = User::where('role', 'user')->with(['activeSubscription.plan'])->withTrashed();
 
         // Search
         if ($request->filled('search')) {
@@ -32,6 +33,12 @@ class UserController extends Controller
                 $query->where('is_suspended', true);
             } elseif ($request->status === 'active') {
                 $query->where('is_suspended', false);
+            } elseif ($request->status === 'deleted') {
+                // Show only soft-deleted users
+                $query->whereNotNull('deleted_at');
+            } elseif ($request->status === 'not_deleted') {
+                // Show only non-deleted users
+                $query->whereNull('deleted_at');
             }
         }
 
@@ -45,7 +52,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::with(['subscriptions.plan', 'activityLogs'])
+        $user = User::withTrashed()->with(['subscriptions.plan', 'activityLogs'])
             ->findOrFail($id);
 
         $totalSessions = $user->activityLogs()->count();
@@ -86,7 +93,13 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::withTrashed()->findOrFail($id);
+        
+        // Prevent editing deleted users
+        if ($user->trashed()) {
+            return redirect()->route('admin.users.index')->with('error', 'Cannot edit a deleted user. Please restore the user first.');
+        }
+        
         return view('admin.users.edit', compact('user'));
     }
 
@@ -95,7 +108,12 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $user = User::withTrashed()->findOrFail($id);
+        
+        // Prevent updating deleted users
+        if ($user->trashed()) {
+            return redirect()->route('admin.users.index')->with('error', 'Cannot update a deleted user. Please restore the user first.');
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -151,14 +169,49 @@ class UserController extends Controller
     }
 
     /**
-     * Delete user
+     * Delete user (soft delete)
      */
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::withTrashed()->findOrFail($id);
+        
+        // If already soft-deleted, prevent duplicate soft delete
+        if ($user->trashed()) {
+            return redirect()->route('admin.users.index')->with('error', 'User is already deleted. Use force delete to permanently remove.');
+        }
+        
         $user->delete();
 
         return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
+    }
+
+    /**
+     * Restore a soft-deleted user
+     */
+    public function restore($id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        
+        if (!$user->trashed()) {
+            return back()->with('error', 'User is not deleted.');
+        }
+        
+        $user->restore();
+
+        return back()->with('success', 'User restored successfully.');
+    }
+
+    /**
+     * Permanently delete a user
+     */
+    public function forceDestroy($id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        
+        // Force delete permanently removes the user from database
+        $user->forceDelete();
+
+        return redirect()->route('admin.users.index')->with('success', 'User permanently deleted.');
     }
 
     /**
@@ -166,7 +219,7 @@ class UserController extends Controller
      */
     public function activity($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::withTrashed()->findOrFail($id);
         $activities = UserActivityLog::where('user_id', $id)
             ->latest('session_start')
             ->paginate(20);

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\SubscriptionController;
 use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\GenerationController;
 use App\Http\Controllers\Api\ReferralController;
+use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\Admin\ReferralSettingsController;
 
 // Public routes
@@ -26,6 +27,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Authentication
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'profile']);
+    
+    // Account Management
+    Route::delete('/account/delete', [AccountController::class, 'deleteAccount']);
     
     // Subscription Management
     Route::prefix('subscription')->group(function () {

@@ -47,9 +47,9 @@
                                name="type" 
                                value="video" 
                                {{ old('type') == 'video' ? 'checked' : '' }}
-                               class="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500">
+                               class="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500">
                         <span class="ml-2 text-sm text-gray-700">
-                            <i class="fas fa-video mr-1 text-purple-500"></i> Video Template
+                            <i class="fas fa-video mr-1 text-blue-500"></i> Video Template
                         </span>
                     </label>
                 </div>

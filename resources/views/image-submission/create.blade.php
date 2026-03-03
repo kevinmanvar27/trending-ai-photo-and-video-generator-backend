@@ -74,7 +74,7 @@
                 <!-- Upload Form -->
                 <div class="bg-white rounded-lg shadow-lg p-6">
                     <h2 class="text-xl font-bold text-gray-800 mb-4">
-                        <i class="fas fa-upload mr-2 {{ $template->type == 'video' ? 'text-purple-500' : 'text-blue-500' }}"></i>
+                        <i class="fas fa-upload mr-2 {{ $template->type == 'video' ? 'text-blue-500' : 'text-blue-500' }}"></i>
                         Upload Your {{ ucfirst($template->type) }}
                     </h2>
 
@@ -143,7 +143,7 @@
 
                         <!-- Submit Button -->
                         <button type="submit" 
-                                class="w-full {{ $template->type == 'video' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-blue-500 hover:bg-blue-600' }} text-white py-4 rounded-lg font-medium text-lg transition-colors duration-200">
+                                class="w-full {{ $template->type == 'video' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-blue-500 hover:bg-blue-600' }} text-white py-4 rounded-lg font-medium text-lg transition-colors duration-200">
                             <i class="fas fa-magic mr-2"></i>
                             Process My {{ ucfirst($template->type) }}
                         </button>

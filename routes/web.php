@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\AccountController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController;
@@ -38,6 +39,10 @@ Route::middleware('guest')->group(function () {
 
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
+// Account Deletion (Public - No authentication required)
+Route::get('/account/delete', [AccountController::class, 'showDeleteForm'])->name('account.delete.form');
+Route::post('/account/delete', [AccountController::class, 'deleteAccount'])->name('account.delete');
+
 // Admin Authentication Routes
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('guest')->group(function () {
@@ -57,6 +62,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('users', UserController::class);
     Route::post('users/{id}/suspend', [UserController::class, 'suspend'])->name('users.suspend');
     Route::post('users/{id}/unsuspend', [UserController::class, 'unsuspend'])->name('users.unsuspend');
+    Route::post('users/{id}/restore', [UserController::class, 'restore'])->name('users.restore');
+    Route::delete('users/{id}/force-delete', [UserController::class, 'forceDestroy'])->name('users.force-delete');
     Route::get('users/{id}/activity', [UserController::class, 'activity'])->name('users.activity');
 
     // Subscription Plans

@@ -144,6 +144,86 @@ class SettingSeeder extends Seeder
                 'type' => 'number',
                 'group' => 'api'
             ],
+            
+            // Footer Settings
+            [
+                'key' => 'footer_description',
+                'value' => 'Transform your media with AI-powered effects',
+                'type' => 'textarea',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_email',
+                'value' => 'support@example.com',
+                'type' => 'text',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_phone',
+                'value' => '+1 (555) 123-4567',
+                'type' => 'text',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_address',
+                'value' => '123 AI Street, Tech City, TC 12345',
+                'type' => 'textarea',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_facebook_url',
+                'value' => '',
+                'type' => 'url',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_twitter_url',
+                'value' => '',
+                'type' => 'url',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_instagram_url',
+                'value' => '',
+                'type' => 'url',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_youtube_url',
+                'value' => '',
+                'type' => 'url',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_linkedin_url',
+                'value' => '',
+                'type' => 'url',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_tiktok_url',
+                'value' => '',
+                'type' => 'url',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_privacy_url',
+                'value' => '',
+                'type' => 'url',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_terms_url',
+                'value' => '',
+                'type' => 'url',
+                'group' => 'footer'
+            ],
+            [
+                'key' => 'footer_contact_url',
+                'value' => '',
+                'type' => 'url',
+                'group' => 'footer'
+            ],
         ];
 
         foreach ($settings as $setting) {

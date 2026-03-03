@@ -60,6 +60,20 @@ class SettingController extends Controller
             // Google authentication settings
             'google_client_id' => 'nullable|string|max:500',
             'google_login_enabled' => 'nullable|in:0,1',
+            // Footer settings validation
+            'footer_description' => 'nullable|string|max:500',
+            'footer_email' => 'nullable|email|max:255',
+            'footer_phone' => 'nullable|string|max:20',
+            'footer_address' => 'nullable|string|max:500',
+            'footer_facebook_url' => 'nullable|url|max:500',
+            'footer_twitter_url' => 'nullable|url|max:500',
+            'footer_instagram_url' => 'nullable|url|max:500',
+            'footer_youtube_url' => 'nullable|url|max:500',
+            'footer_linkedin_url' => 'nullable|url|max:500',
+            'footer_tiktok_url' => 'nullable|url|max:500',
+            'footer_privacy_url' => 'nullable|url|max:500',
+            'footer_terms_url' => 'nullable|url|max:500',
+            'footer_contact_url' => 'nullable|url|max:500',
         ]);
 
         // Handle file uploads
@@ -117,6 +131,20 @@ class SettingController extends Controller
             'referral_bonus_for_new_user' => ['type' => 'number', 'group' => 'referral'],
             // Google authentication settings
             'google_client_id' => ['type' => 'text', 'group' => 'authentication'],
+            // Footer settings
+            'footer_description' => ['type' => 'textarea', 'group' => 'footer'],
+            'footer_email' => ['type' => 'text', 'group' => 'footer'],
+            'footer_phone' => ['type' => 'text', 'group' => 'footer'],
+            'footer_address' => ['type' => 'textarea', 'group' => 'footer'],
+            'footer_facebook_url' => ['type' => 'url', 'group' => 'footer'],
+            'footer_twitter_url' => ['type' => 'url', 'group' => 'footer'],
+            'footer_instagram_url' => ['type' => 'url', 'group' => 'footer'],
+            'footer_youtube_url' => ['type' => 'url', 'group' => 'footer'],
+            'footer_linkedin_url' => ['type' => 'url', 'group' => 'footer'],
+            'footer_tiktok_url' => ['type' => 'url', 'group' => 'footer'],
+            'footer_privacy_url' => ['type' => 'url', 'group' => 'footer'],
+            'footer_terms_url' => ['type' => 'url', 'group' => 'footer'],
+            'footer_contact_url' => ['type' => 'url', 'group' => 'footer'],
         ];
 
         foreach ($textSettings as $key => $config) {

@@ -157,7 +157,7 @@
                         <i class="fas fa-wand-magic-sparkles mr-2 text-blue-500"></i>
                         AI Processing Result
                     </h3>
-                    <div class="border border-gray-300 rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-purple-50">
+                    <div class="border border-gray-300 rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-blue-50">
                         @if($submission->processed_image_path)
                             @php
                                 $extension = pathinfo($submission->processed_image_path, PATHINFO_EXTENSION);

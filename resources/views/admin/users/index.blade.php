@@ -10,6 +10,15 @@
             <h3 class="text-lg font-semibold text-gray-800">
                 <i class="fas fa-users mr-2"></i> All Users
             </h3>
+            <!-- Status Filter Dropdown -->
+            <div class="relative">
+                <select id="statusFilter" onchange="filterByStatus(this.value)" class="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Users</option>
+                    <option value="not_deleted" {{ request('status') === 'not_deleted' ? 'selected' : '' }}>Active Only</option>
+                    <option value="deleted" {{ request('status') === 'deleted' ? 'selected' : '' }}>Deleted Only</option>
+                    <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
+                </select>
+            </div>
         </div>
         <a href="{{ route('admin.users.create') }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
             <i class="fas fa-plus mr-1"></i> Add User
@@ -32,52 +41,84 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($users as $user)
-                        <tr>
-                            <td class="px-6 py-4">{{ $user->name }}</td>
-                            <td class="px-6 py-4">{{ $user->email }}</td>
-                            <td class="px-6 py-4">
-                                @if($user->is_suspended)
-                                    <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800">Suspended</span>
-                                @else
-                                    <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">Active</span>
+                        <tr class="{{ $user->trashed() ? 'bg-red-50' : '' }}">
+                            <td class="px-6 py-4 {{ $user->trashed() ? 'text-gray-500' : '' }}">
+                                {{ $user->name }}
+                                @if($user->trashed())
+                                    <i class="fas fa-trash text-red-500 ml-1" title="Deleted"></i>
                                 @endif
                             </td>
+                            <td class="px-6 py-4 {{ $user->trashed() ? 'text-gray-500' : '' }}">{{ $user->email }}</td>
                             <td class="px-6 py-4">
+                                @if($user->trashed())
+                                    <span class="px-2 py-1 text-xs rounded bg-red-100 text-red-800">
+                                        <i class="fas fa-trash mr-1"></i> Deleted
+                                    </span>
+                                @elseif($user->is_suspended)
+                                    <span class="px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800">
+                                        <i class="fas fa-ban mr-1"></i> Suspended
+                                    </span>
+                                @else
+                                    <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-800">
+                                        <i class="fas fa-check-circle mr-1"></i> Active
+                                    </span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 {{ $user->trashed() ? 'text-gray-500' : '' }}">
                                 @if($user->activeSubscription)
                                     <span class="text-sm">{{ $user->activeSubscription->plan->name }}</span>
                                 @else
                                     <span class="text-gray-400">No subscription</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">{{ $user->formatted_time_spent }}</td>
-                            <td class="px-6 py-4" data-order="{{ $user->created_at->timestamp }}">{{ $user->created_at->format('M d, Y') }}</td>
+                            <td class="px-6 py-4 {{ $user->trashed() ? 'text-gray-500' : '' }}">{{ $user->formatted_time_spent }}</td>
+                            <td class="px-6 py-4 {{ $user->trashed() ? 'text-gray-500' : '' }}" data-order="{{ $user->created_at->timestamp }}">
+                                {{ $user->created_at->format('M d, Y') }}
+                                @if($user->trashed())
+                                    <br><small class="text-red-600">Deleted: {{ $user->deleted_at->format('M d, Y') }}</small>
+                                @endif
+                            </td>
                             <td class="px-6 py-4">
                                 <div class="flex space-x-2">
-                                    <a href="{{ route('admin.users.show', $user->id) }}" class="text-blue-600 hover:text-blue-800" title="View">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                    <a href="{{ route('admin.users.edit', $user->id) }}" class="text-green-600 hover:text-green-800" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    @if($user->is_suspended)
-                                        <form action="{{ route('admin.users.unsuspend', $user->id) }}" method="POST" class="inline">
+                                    @if($user->trashed())
+                                        <!-- Actions for deleted users -->
+                                        <form action="{{ route('admin.users.restore', $user->id) }}" method="POST" class="inline">
                                             @csrf
-                                            <button type="submit" class="text-green-600 hover:text-green-800" title="Unsuspend">
-                                                <i class="fas fa-user-check"></i>
+                                            <button type="submit" class="text-green-600 hover:text-green-800" title="Restore User">
+                                                <i class="fas fa-undo"></i>
                                             </button>
                                         </form>
+                                        <button onclick="showForceDeleteModal({{ $user->id }})" class="text-red-600 hover:text-red-800" title="Permanently Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
                                     @else
-                                        <button onclick="showSuspendModal({{ $user->id }})" class="text-yellow-600 hover:text-yellow-800" title="Suspend">
-                                            <i class="fas fa-user-slash"></i>
-                                        </button>
+                                        <!-- Actions for active users -->
+                                        <a href="{{ route('admin.users.show', $user->id) }}" class="text-blue-600 hover:text-blue-800" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ route('admin.users.edit', $user->id) }}" class="text-green-600 hover:text-green-800" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        @if($user->is_suspended)
+                                            <form action="{{ route('admin.users.unsuspend', $user->id) }}" method="POST" class="inline">
+                                                @csrf
+                                                <button type="submit" class="text-green-600 hover:text-green-800" title="Unsuspend">
+                                                    <i class="fas fa-user-check"></i>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button onclick="showSuspendModal({{ $user->id }})" class="text-yellow-600 hover:text-yellow-800" title="Suspend">
+                                                <i class="fas fa-user-slash"></i>
+                                            </button>
+                                        @endif
+                                        <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this user? They can be restored later.')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="text-red-600 hover:text-red-800" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     @endif
-                                    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-800" title="Delete">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
                                 </div>
                             </td>
                         </tr>
@@ -112,6 +153,31 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Force Delete Modal -->
+<div id="forceDeleteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="text-center">
+            <i class="fas fa-exclamation-triangle text-red-500 text-5xl mb-4"></i>
+            <h3 class="text-lg font-bold mb-4 text-red-600">Permanently Delete User</h3>
+            <p class="text-gray-600 mb-6">
+                This action <strong>cannot be undone</strong>. The user and all their data will be permanently removed from the database.
+            </p>
+            <form id="forceDeleteForm" method="POST">
+                @csrf
+                @method('DELETE')
+                <div class="flex justify-center space-x-2">
+                    <button type="button" onclick="closeForceDeleteModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                        Cancel
+                    </button>
+                    <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                        <i class="fas fa-trash-alt mr-1"></i> Permanently Delete
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection
@@ -316,10 +382,37 @@ function closeSuspendModal() {
     document.getElementById('suspendModal').classList.add('hidden');
 }
 
-// Close modal when clicking outside
+// Force Delete Modal Functions
+function showForceDeleteModal(userId) {
+    document.getElementById('forceDeleteModal').classList.remove('hidden');
+    document.getElementById('forceDeleteForm').action = `/admin/users/${userId}/force-delete`;
+}
+
+function closeForceDeleteModal() {
+    document.getElementById('forceDeleteModal').classList.add('hidden');
+}
+
+// Filter by status function
+function filterByStatus(status) {
+    const url = new URL(window.location.href);
+    if (status) {
+        url.searchParams.set('status', status);
+    } else {
+        url.searchParams.delete('status');
+    }
+    window.location.href = url.toString();
+}
+
+// Close modals when clicking outside
 document.getElementById('suspendModal').addEventListener('click', function(e) {
     if (e.target === this) {
         closeSuspendModal();
+    }
+});
+
+document.getElementById('forceDeleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeForceDeleteModal();
     }
 });
 </script>

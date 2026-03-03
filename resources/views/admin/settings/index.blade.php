@@ -10,12 +10,6 @@
         </h1>
     </div>
 
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-            {{ session('success') }}
-        </div>
-    @endif
-
     @if($errors->any())
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             <ul class="list-disc list-inside">
@@ -56,6 +50,10 @@
                 <button type="button" onclick="showTab('authentication')" id="tab-authentication"
                     class="tab-button border-b-2 border-transparent py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                     <i class="fas fa-shield-alt mr-2"></i>Authentication
+                </button>
+                <button type="button" onclick="showTab('footer')" id="tab-footer"
+                    class="tab-button border-b-2 border-transparent py-4 px-1 text-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    <i class="fas fa-shoe-prints mr-2"></i>Footer
                 </button>
             </nav>
         </div>
@@ -642,14 +640,14 @@
                 </div>
 
                 <!-- Statistics Summary -->
-                <div class="mt-6 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
+                <div class="mt-6 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-6">
                     <h3 class="text-lg font-semibold text-gray-800 mb-4">
                         <i class="fas fa-chart-line mr-2"></i>Referral System Overview
                     </h3>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div class="bg-white rounded-lg p-4 shadow-sm">
                             <div class="text-sm text-gray-600 mb-1">Total Cost Per Referral</div>
-                            <div class="text-2xl font-bold text-purple-600" id="total-cost">
+                            <div class="text-2xl font-bold text-blue-600" id="total-cost">
                                 {{ (old('referral_coins_per_referral', $settings->get('referral_coins_per_referral')->value ?? '100') + old('referral_bonus_for_new_user', $settings->get('referral_bonus_for_new_user')->value ?? '50')) }} coins
                             </div>
                             <div class="text-xs text-gray-500 mt-1">Referrer + New User</div>
@@ -671,7 +669,7 @@
                                     Standard (100/50)
                                 </button>
                                 <button type="button" onclick="setPreset('aggressive')" 
-                                    class="text-xs bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded">
+                                    class="text-xs bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded">
                                     Aggressive (300/150)
                                 </button>
                             </div>
@@ -816,6 +814,205 @@ final bearerToken = data['data']['token'];</code></pre>
                             View google_sign_in package documentation
                         </a>
                     </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Tab -->
+        <div id="content-footer" class="tab-content hidden">
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-info-circle mr-2"></i>Footer Information
+                </h2>
+
+                <div class="mb-4 bg-blue-50 border-l-4 border-blue-500 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-blue-700">
+                                Customize your website footer with company information, contact details, and social media links.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Footer Description
+                    </label>
+                    <textarea name="footer_description" rows="3"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="Transform your media with AI-powered effects">{{ old('footer_description', $settings->get('footer_description')->value ?? '') }}</textarea>
+                    <p class="text-gray-500 text-xs mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Brief description that appears in the footer brand section
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-address-book mr-2"></i>Contact Information
+                </h2>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        <i class="fas fa-envelope mr-1"></i>Footer Email
+                    </label>
+                    <input type="email" name="footer_email" 
+                        value="{{ old('footer_email', $settings->get('footer_email')->value ?? '') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="support@example.com">
+                    <p class="text-gray-500 text-xs mt-1">Email address displayed in footer</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        <i class="fas fa-phone mr-1"></i>Footer Phone
+                    </label>
+                    <input type="text" name="footer_phone" 
+                        value="{{ old('footer_phone', $settings->get('footer_phone')->value ?? '') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="+1 (555) 123-4567">
+                    <p class="text-gray-500 text-xs mt-1">Phone number displayed in footer</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        <i class="fas fa-map-marker-alt mr-1"></i>Footer Address
+                    </label>
+                    <textarea name="footer_address" rows="2"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="123 AI Street, Tech City, TC 12345">{{ old('footer_address', $settings->get('footer_address')->value ?? '') }}</textarea>
+                    <p class="text-gray-500 text-xs mt-1">Physical address displayed in footer</p>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-share-alt mr-2"></i>Social Media Links
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            <i class="fab fa-facebook-f mr-1 text-blue-600"></i>Facebook URL
+                        </label>
+                        <input type="url" name="footer_facebook_url" 
+                            value="{{ old('footer_facebook_url', $settings->get('footer_facebook_url')->value ?? '') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="https://facebook.com/yourpage">
+                        <p class="text-gray-500 text-xs mt-1">Leave empty to hide Facebook icon</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            <i class="fab fa-twitter mr-1 text-blue-400"></i>Twitter/X URL
+                        </label>
+                        <input type="url" name="footer_twitter_url" 
+                            value="{{ old('footer_twitter_url', $settings->get('footer_twitter_url')->value ?? '') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="https://twitter.com/yourhandle">
+                        <p class="text-gray-500 text-xs mt-1">Leave empty to hide Twitter icon</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            <i class="fab fa-instagram mr-1 text-cyan-600"></i>Instagram URL
+                        </label>
+                        <input type="url" name="footer_instagram_url" 
+                            value="{{ old('footer_instagram_url', $settings->get('footer_instagram_url')->value ?? '') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="https://instagram.com/yourprofile">
+                        <p class="text-gray-500 text-xs mt-1">Leave empty to hide Instagram icon</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            <i class="fab fa-youtube mr-1 text-red-600"></i>YouTube URL
+                        </label>
+                        <input type="url" name="footer_youtube_url" 
+                            value="{{ old('footer_youtube_url', $settings->get('footer_youtube_url')->value ?? '') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="https://youtube.com/@yourchannel">
+                        <p class="text-gray-500 text-xs mt-1">Leave empty to hide YouTube icon</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            <i class="fab fa-linkedin-in mr-1 text-blue-700"></i>LinkedIn URL
+                        </label>
+                        <input type="url" name="footer_linkedin_url" 
+                            value="{{ old('footer_linkedin_url', $settings->get('footer_linkedin_url')->value ?? '') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="https://linkedin.com/company/yourcompany">
+                        <p class="text-gray-500 text-xs mt-1">Leave empty to hide LinkedIn icon</p>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            <i class="fab fa-tiktok mr-1 text-gray-800"></i>TikTok URL
+                        </label>
+                        <input type="url" name="footer_tiktok_url" 
+                            value="{{ old('footer_tiktok_url', $settings->get('footer_tiktok_url')->value ?? '') }}"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                            placeholder="https://tiktok.com/@youraccount">
+                        <p class="text-gray-500 text-xs mt-1">Leave empty to hide TikTok icon</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 bg-green-50 border-l-4 border-green-500 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-check-circle text-green-500"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-green-700">
+                                <strong>Tip:</strong> Only social media icons with URLs will be displayed in the footer. Empty fields will be automatically hidden.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-link mr-2"></i>Footer Links
+                </h2>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Privacy Policy URL
+                    </label>
+                    <input type="url" name="footer_privacy_url" 
+                        value="{{ old('footer_privacy_url', $settings->get('footer_privacy_url')->value ?? '') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="https://yoursite.com/privacy-policy">
+                    <p class="text-gray-500 text-xs mt-1">Link to your privacy policy page</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Terms of Service URL
+                    </label>
+                    <input type="url" name="footer_terms_url" 
+                        value="{{ old('footer_terms_url', $settings->get('footer_terms_url')->value ?? '') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="https://yoursite.com/terms-of-service">
+                    <p class="text-gray-500 text-xs mt-1">Link to your terms of service page</p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">
+                        Contact Page URL
+                    </label>
+                    <input type="url" name="footer_contact_url" 
+                        value="{{ old('footer_contact_url', $settings->get('footer_contact_url')->value ?? '') }}"
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        placeholder="https://yoursite.com/contact">
+                    <p class="text-gray-500 text-xs mt-1">Link to your contact page</p>
                 </div>
             </div>
         </div>
