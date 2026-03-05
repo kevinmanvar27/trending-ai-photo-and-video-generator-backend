@@ -173,7 +173,7 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone ?? null,
-                'avatar' => null, // Add avatar URL if you have avatar field
+                'avatar' => $user->avatar, // Return avatar URL
                 'created_at' => $user->created_at,
                 'subscription' => $subscriptionData,
                 'referral' => $referralStats,
@@ -221,8 +221,12 @@ class AuthController extends Controller
             // Get Google Client ID from settings
             $googleClientId = Setting::get('google_client_id');
             
-            \Log::info('Google Client ID', [
-                'client_id' => $googleClientId,
+            // Support for Android/iOS Client IDs (extracted from your token)
+            $googleClientIdAndroid = '858164631228-vbb2qmps26ucp1qtkjcu2pf6vtq4gd0e.apps.googleusercontent.com';
+            
+            \Log::info('Google Client ID Configuration', [
+                'web_client_id' => $googleClientId,
+                'android_client_id' => $googleClientIdAndroid,
                 'is_empty' => empty($googleClientId),
             ]);
             
@@ -234,16 +238,23 @@ class AuthController extends Controller
                 ], 500);
             }
 
-            // Initialize Google Client
+            // Initialize Google Client with primary (web) client ID
             $client = new \Google\Client(['client_id' => $googleClientId]);
             
-            \Log::info('Attempting token verification...');
+            \Log::info('Attempting token verification with web client ID...');
             
-            // Verify the ID token
+            // Try to verify with primary (web) client ID first
             $payload = $client->verifyIdToken($request->id_token);
             
+            // If verification fails with web client ID, try with Android client ID
             if (!$payload) {
-                \Log::error('Token verification failed', [
+                \Log::info('Web client ID verification failed, trying Android client ID...');
+                $clientAndroid = new \Google\Client(['client_id' => $googleClientIdAndroid]);
+                $payload = $clientAndroid->verifyIdToken($request->id_token);
+            }
+            
+            if (!$payload) {
+                \Log::error('Token verification failed with all client IDs', [
                     'token_preview' => substr($request->id_token, 0, 50) . '...',
                 ]);
                 return response()->json([
@@ -255,19 +266,42 @@ class AuthController extends Controller
             \Log::info('Token verified successfully', [
                 'email' => $payload['email'] ?? 'unknown',
                 'sub' => $payload['sub'] ?? 'unknown',
+                'azp' => $payload['azp'] ?? 'unknown',
+                'aud' => $payload['aud'] ?? 'unknown',
             ]);
 
             // Extract user information from Google payload
             $googleId = $payload['sub'];
             $email = $payload['email'];
             $name = $payload['name'] ?? '';
+            $picture = $payload['picture'] ?? null;
             $emailVerified = $payload['email_verified'] ?? false;
+            
+            \Log::info('Extracted user data from token', [
+                'google_id' => $googleId,
+                'email' => $email,
+                'name' => $name,
+                'has_picture' => !empty($picture),
+            ]);
 
             // Check if user exists by email
             $user = User::where('email', $email)->first();
 
             if ($user) {
                 \Log::info('Existing user found', ['user_id' => $user->id, 'email' => $email]);
+                
+                // Update Google ID and avatar if not already set
+                $updateData = [];
+                if (empty($user->google_id)) {
+                    $updateData['google_id'] = $googleId;
+                }
+                if (empty($user->avatar) && !empty($picture)) {
+                    $updateData['avatar'] = $picture;
+                }
+                if (!empty($updateData)) {
+                    $user->update($updateData);
+                    \Log::info('Updated user with Google data', $updateData);
+                }
                 
                 // User exists - check if suspended
                 if ($user->isSuspended()) {
@@ -292,6 +326,7 @@ class AuthController extends Controller
                             'id' => $user->id,
                             'name' => $user->name,
                             'email' => $user->email,
+                            'avatar' => $user->avatar,
                             'referral_code' => $user->referral_code,
                             'referral_coins' => $user->referral_coins,
                         ],
@@ -307,6 +342,8 @@ class AuthController extends Controller
                 $user = User::create([
                     'name' => $name,
                     'email' => $email,
+                    'google_id' => $googleId,
+                    'avatar' => $picture,
                     'password' => Hash::make(uniqid()), // Random password for Google users
                     'role' => 'user',
                     'referral_code' => $referralCode,
@@ -350,6 +387,7 @@ class AuthController extends Controller
                             'id' => $user->id,
                             'name' => $user->name,
                             'email' => $user->email,
+                            'avatar' => $user->avatar,
                             'referral_code' => $user->referral_code,
                             'referral_coins' => $user->referral_coins,
                         ],
