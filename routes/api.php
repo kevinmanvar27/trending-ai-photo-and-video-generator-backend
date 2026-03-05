@@ -38,6 +38,19 @@ Route::get('/subscription/plans', [SubscriptionController::class, 'plans']);
 // Public referral code validation
 Route::post('/referral/validate', [ReferralController::class, 'validateReferralCode']);
 
+// Debug endpoint to list all referral codes (remove in production)
+Route::get('/referral/debug-codes', function () {
+    $users = \App\Models\User::whereNotNull('referral_code')
+        ->select('id', 'name', 'email', 'referral_code')
+        ->get();
+    
+    return response()->json([
+        'success' => true,
+        'total_users' => $users->count(),
+        'users' => $users,
+    ]);
+});
+
 // Public app configuration
 Route::get('/app/config', function () {
     return response()->json([

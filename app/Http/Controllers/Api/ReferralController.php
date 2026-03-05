@@ -85,7 +85,18 @@ class ReferralController extends Controller
             'referral_code' => 'required|string|max:20',
         ]);
 
+        \Log::info('Validating referral code', [
+            'code' => $request->referral_code,
+            'code_upper' => strtoupper(trim($request->referral_code)),
+        ]);
+
         $user = ReferralService::validateReferralCode($request->referral_code);
+
+        \Log::info('Validation result', [
+            'user_found' => $user ? true : false,
+            'user_id' => $user ? $user->id : null,
+            'user_name' => $user ? $user->name : null,
+        ]);
 
         if (!$user) {
             return response()->json([
