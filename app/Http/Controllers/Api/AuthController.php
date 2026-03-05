@@ -238,23 +238,80 @@ class AuthController extends Controller
                 ], 500);
             }
 
-            // Initialize Google Client with primary (web) client ID
-            $client = new \Google\Client(['client_id' => $googleClientId]);
+            // Initialize Google Client with both client IDs (array format)
+            $client = new \Google\Client();
+            $client->setAuthConfig([
+                'web' => [
+                    'client_id' => $googleClientId
+                ]
+            ]);
             
-            \Log::info('Attempting token verification with web client ID...');
+            \Log::info('Attempting token verification with multiple client IDs...');
             
-            // Try to verify with primary (web) client ID first
-            $payload = $client->verifyIdToken($request->id_token);
+            // Try to verify with web client ID first
+            $payload = null;
+            try {
+                $payload = $client->verifyIdToken($request->id_token);
+            } catch (\Exception $e) {
+                \Log::info('Web client ID verification failed: ' . $e->getMessage());
+            }
             
             // If verification fails with web client ID, try with Android client ID
             if (!$payload) {
-                \Log::info('Web client ID verification failed, trying Android client ID...');
-                $clientAndroid = new \Google\Client(['client_id' => $googleClientIdAndroid]);
-                $payload = $clientAndroid->verifyIdToken($request->id_token);
+                \Log::info('Trying Android client ID...');
+                try {
+                    $clientAndroid = new \Google\Client();
+                    $clientAndroid->setAuthConfig([
+                        'web' => [
+                            'client_id' => $googleClientIdAndroid
+                        ]
+                    ]);
+                    $payload = $clientAndroid->verifyIdToken($request->id_token);
+                } catch (\Exception $e) {
+                    \Log::info('Android client ID verification failed: ' . $e->getMessage());
+                }
+            }
+            
+            // Manual validation: Check if token's aud or azp matches either client ID
+            if (!$payload) {
+                \Log::info('Attempting manual token validation...');
+                try {
+                    // Decode token without verification to check aud/azp
+                    $tokenParts = explode('.', $request->id_token);
+                    if (count($tokenParts) === 3) {
+                        $payloadData = json_decode(base64_decode(strtr($tokenParts[1], '-_', '+/')), true);
+                        
+                        \Log::info('Token payload decoded', [
+                            'aud' => $payloadData['aud'] ?? 'missing',
+                            'azp' => $payloadData['azp'] ?? 'missing',
+                            'email' => $payloadData['email'] ?? 'missing',
+                        ]);
+                        
+                        // Check if aud or azp matches either client ID
+                        $aud = $payloadData['aud'] ?? '';
+                        $azp = $payloadData['azp'] ?? '';
+                        
+                        if ($aud === $googleClientId || $aud === $googleClientIdAndroid || 
+                            $azp === $googleClientId || $azp === $googleClientIdAndroid) {
+                            
+                            \Log::info('Token aud/azp matches one of our client IDs, attempting verification with matching ID...');
+                            
+                            // Use the matching client ID for verification
+                            $matchingClientId = ($aud === $googleClientIdAndroid || $azp === $googleClientIdAndroid) 
+                                ? $googleClientIdAndroid 
+                                : $googleClientId;
+                            
+                            $clientMatching = new \Google\Client(['client_id' => $matchingClientId]);
+                            $payload = $clientMatching->verifyIdToken($request->id_token);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Manual token validation failed: ' . $e->getMessage());
+                }
             }
             
             if (!$payload) {
-                \Log::error('Token verification failed with all client IDs', [
+                \Log::error('Token verification failed with all methods', [
                     'token_preview' => substr($request->id_token, 0, 50) . '...',
                 ]);
                 return response()->json([
