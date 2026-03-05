@@ -166,16 +166,6 @@ class SubscriptionController extends Controller
                     'coins_used' => 0,
                 ]);
 
-                // Complete referral if this is user's first subscription
-                $hasExistingSubscription = UserSubscription::where('user_id', $user->id)
-                    ->where('id', '!=', $subscription->id)
-                    ->exists();
-                
-                if (!$hasExistingSubscription) {
-                    // This is the first subscription, complete the referral
-                    ReferralService::completeReferral($user->id, 100);
-                }
-
                 DB::commit();
 
                 // Load plan relationship

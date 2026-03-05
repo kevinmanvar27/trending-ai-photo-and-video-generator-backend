@@ -46,6 +46,7 @@ class AuthController extends Controller
 
         // Apply referral code if provided and award bonus coins
         $bonusCoinsReceived = 0;
+        $referrerCoinsAwarded = 0;
         if ($request->has('referral_code') && !empty($request->referral_code)) {
             $referralApplied = ReferralService::applyReferralCode($user->id, $request->referral_code);
             
@@ -53,6 +54,11 @@ class AuthController extends Controller
             if ($referralApplied && ReferralService::isReferralSystemEnabled()) {
                 $bonusCoinsReceived = ReferralService::getNewUserBonusAmount();
                 $user->increment('referral_coins', $bonusCoinsReceived);
+                
+                // Complete the referral immediately and award coins to the referrer (User A)
+                $referrerCoinsAwarded = ReferralService::getReferralCoinsAmount();
+                ReferralService::completeReferral($user->id, $referrerCoinsAwarded);
+                
                 $user->refresh(); // Refresh to get updated coins value
             }
         }
@@ -73,6 +79,7 @@ class AuthController extends Controller
                 'token' => $token,
                 'signup_bonus_received' => $signupBonusReceived,
                 'bonus_coins_received' => $bonusCoinsReceived,
+                'referrer_coins_awarded' => $referrerCoinsAwarded,
                 'total_coins_received' => $signupBonusReceived + $bonusCoinsReceived,
             ],
         ], 201);
@@ -542,6 +549,7 @@ class AuthController extends Controller
 
                 // Apply referral code if provided and award bonus coins
                 $bonusCoinsReceived = 0;
+                $referrerCoinsAwarded = 0;
                 if ($request->has('referral_code') && !empty($request->referral_code)) {
                     $referralApplied = ReferralService::applyReferralCode($user->id, $request->referral_code);
                     
@@ -549,6 +557,11 @@ class AuthController extends Controller
                     if ($referralApplied && ReferralService::isReferralSystemEnabled()) {
                         $bonusCoinsReceived = ReferralService::getNewUserBonusAmount();
                         $user->increment('referral_coins', $bonusCoinsReceived);
+                        
+                        // Complete the referral immediately and award coins to the referrer (User A)
+                        $referrerCoinsAwarded = ReferralService::getReferralCoinsAmount();
+                        ReferralService::completeReferral($user->id, $referrerCoinsAwarded);
+                        
                         $user->refresh();
                     }
                 }
@@ -561,6 +574,7 @@ class AuthController extends Controller
                     'email' => $email,
                     'signup_bonus' => $signupBonusReceived,
                     'referral_bonus' => $bonusCoinsReceived,
+                    'referrer_coins_awarded' => $referrerCoinsAwarded,
                 ]);
 
                 return response()->json([
@@ -579,6 +593,7 @@ class AuthController extends Controller
                         'is_new_user' => true,
                         'signup_bonus_received' => $signupBonusReceived,
                         'bonus_coins_received' => $bonusCoinsReceived,
+                        'referrer_coins_awarded' => $referrerCoinsAwarded,
                         'total_coins_received' => $signupBonusReceived + $bonusCoinsReceived,
                     ],
                 ], 201);
