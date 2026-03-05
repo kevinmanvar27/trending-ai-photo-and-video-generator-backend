@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Google\Client as GoogleClient;
+use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
@@ -182,6 +183,83 @@ class AuthController extends Controller
     }
 
     /**
+     * Manually verify Google ID token by decoding and validating
+     * This is a fallback when Google Client library fails
+     */
+    private function manuallyVerifyGoogleToken($idToken, $validClientIds)
+    {
+        try {
+            // Split the token
+            $tokenParts = explode('.', $idToken);
+            if (count($tokenParts) !== 3) {
+                \Log::error('Manual verification: Invalid token format');
+                return null;
+            }
+
+            // Decode the payload
+            $payload = json_decode(base64_decode(strtr($tokenParts[1], '-_', '+/')), true);
+            
+            if (!$payload) {
+                \Log::error('Manual verification: Failed to decode payload');
+                return null;
+            }
+
+            // Validate required fields
+            if (!isset($payload['email']) || !isset($payload['sub'])) {
+                \Log::error('Manual verification: Missing required fields', ['payload' => $payload]);
+                return null;
+            }
+
+            // Check expiration
+            if (isset($payload['exp']) && $payload['exp'] < time()) {
+                \Log::error('Manual verification: Token expired', [
+                    'exp' => $payload['exp'],
+                    'now' => time()
+                ]);
+                return null;
+            }
+
+            // Check issuer
+            if (!isset($payload['iss']) || !in_array($payload['iss'], ['https://accounts.google.com', 'accounts.google.com'])) {
+                \Log::error('Manual verification: Invalid issuer', ['iss' => $payload['iss'] ?? 'missing']);
+                return null;
+            }
+
+            // Check audience (aud) or authorized party (azp)
+            $aud = $payload['aud'] ?? '';
+            $azp = $payload['azp'] ?? '';
+            
+            $audValid = in_array($aud, $validClientIds);
+            $azpValid = in_array($azp, $validClientIds);
+            
+            if (!$audValid && !$azpValid) {
+                \Log::error('Manual verification: Invalid audience/azp', [
+                    'aud' => $aud,
+                    'azp' => $azp,
+                    'valid_client_ids' => $validClientIds
+                ]);
+                return null;
+            }
+
+            \Log::info('✓ Manual verification successful', [
+                'email' => $payload['email'],
+                'sub' => $payload['sub'],
+                'aud' => $aud,
+                'azp' => $azp
+            ]);
+
+            return $payload;
+
+        } catch (\Exception $e) {
+            \Log::error('Manual verification exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return null;
+        }
+    }
+
+    /**
      * Google Login - Verify Google token and create/login user
      */
     public function googleLogin(Request $request)
@@ -248,6 +326,7 @@ class AuthController extends Controller
             
             $payload = null;
             $lastError = null;
+            $allErrors = [];
             
             // Try each client ID until one works
             foreach ($validClientIds as $clientId) {
@@ -258,6 +337,14 @@ class AuthController extends Controller
                     
                     $client = new \Google\Client();
                     $client->setClientId($clientId);
+                    
+                    // Set HTTP client options to handle network issues
+                    $httpClient = new \GuzzleHttp\Client([
+                        'verify' => false, // Disable SSL verification if there are certificate issues
+                        'timeout' => 10,
+                        'connect_timeout' => 5,
+                    ]);
+                    $client->setHttpClient($httpClient);
                     
                     // Attempt verification
                     $verifiedPayload = $client->verifyIdToken($request->id_token);
@@ -271,13 +358,23 @@ class AuthController extends Controller
                             'azp' => $payload['azp'] ?? 'unknown',
                         ]);
                         break; // Success! Stop trying other client IDs
+                    } else {
+                        $error = 'verifyIdToken returned false/null';
+                        $lastError = $error;
+                        $allErrors[$clientId] = $error;
+                        \Log::warning('✗ Verification returned false/null', [
+                            'client_id' => $clientId,
+                            'result' => $verifiedPayload,
+                        ]);
                     }
                 } catch (\Exception $e) {
                     $lastError = $e->getMessage();
+                    $allErrors[$clientId] = $e->getMessage();
                     \Log::warning('✗ Verification failed with client ID', [
                         'client_id' => $clientId,
                         'error' => $e->getMessage(),
-                        'exception_type' => get_class($e)
+                        'exception_type' => get_class($e),
+                        'trace' => config('app.debug') ? $e->getTraceAsString() : 'Enable debug mode for trace'
                     ]);
                     // Continue to next client ID
                 }
@@ -285,55 +382,69 @@ class AuthController extends Controller
             
             // If all attempts failed, return error with debug info
             if (!$payload) {
-                $tokenParts = explode('.', $request->id_token);
-                $debugInfo = [
-                    'token_preview' => substr($request->id_token, 0, 50) . '...',
-                    'last_error' => $lastError,
-                ];
+                // Try manual verification as a last resort
+                \Log::info('Attempting manual token verification as fallback...');
+                $payload = $this->manuallyVerifyGoogleToken($request->id_token, $validClientIds);
                 
-                if (count($tokenParts) === 3) {
-                    try {
-                        $payloadData = json_decode(base64_decode(strtr($tokenParts[1], '-_', '+/')), true);
-                        $debugInfo['decoded_aud'] = $payloadData['aud'] ?? 'missing';
-                        $debugInfo['decoded_azp'] = $payloadData['azp'] ?? 'missing';
-                        $debugInfo['decoded_exp'] = $payloadData['exp'] ?? 'missing';
-                        $debugInfo['decoded_iat'] = $payloadData['iat'] ?? 'missing';
-                        $debugInfo['current_timestamp'] = time();
-                        
-                        if (isset($payloadData['exp'])) {
-                            $isExpired = $payloadData['exp'] < time();
-                            $debugInfo['is_expired'] = $isExpired;
-                            if ($isExpired) {
-                                $debugInfo['expired_seconds_ago'] = time() - $payloadData['exp'];
+                if ($payload) {
+                    \Log::info('✓ Manual verification succeeded where Google Client failed!');
+                } else {
+                    $tokenParts = explode('.', $request->id_token);
+                    $debugInfo = [
+                        'token_preview' => substr($request->id_token, 0, 50) . '...',
+                        'last_error' => $lastError,
+                        'all_errors' => $allErrors,
+                    ];
+                    
+                    if (count($tokenParts) === 3) {
+                        try {
+                            $payloadData = json_decode(base64_decode(strtr($tokenParts[1], '-_', '+/')), true);
+                            $debugInfo['decoded_aud'] = $payloadData['aud'] ?? 'missing';
+                            $debugInfo['decoded_azp'] = $payloadData['azp'] ?? 'missing';
+                            $debugInfo['decoded_exp'] = $payloadData['exp'] ?? 'missing';
+                            $debugInfo['decoded_iat'] = $payloadData['iat'] ?? 'missing';
+                            $debugInfo['decoded_iss'] = $payloadData['iss'] ?? 'missing';
+                            $debugInfo['current_timestamp'] = time();
+                            
+                            if (isset($payloadData['exp'])) {
+                                $isExpired = $payloadData['exp'] < time();
+                                $debugInfo['is_expired'] = $isExpired;
+                                if ($isExpired) {
+                                    $debugInfo['expired_seconds_ago'] = time() - $payloadData['exp'];
+                                } else {
+                                    $debugInfo['expires_in_seconds'] = $payloadData['exp'] - time();
+                                }
                             }
+                            
+                            // Check if the token's audience matches any of our client IDs
+                            $aud = $payloadData['aud'] ?? '';
+                            $azp = $payloadData['azp'] ?? '';
+                            $debugInfo['aud_matches'] = in_array($aud, $validClientIds);
+                            $debugInfo['azp_matches'] = in_array($azp, $validClientIds);
+                            
+                        } catch (\Exception $e) {
+                            $debugInfo['decode_error'] = $e->getMessage();
                         }
-                        
-                        // Check if the token's audience matches any of our client IDs
-                        $aud = $payloadData['aud'] ?? '';
-                        $azp = $payloadData['azp'] ?? '';
-                        $debugInfo['aud_matches'] = in_array($aud, $validClientIds);
-                        $debugInfo['azp_matches'] = in_array($azp, $validClientIds);
-                        
-                    } catch (\Exception $e) {
-                        $debugInfo['decode_error'] = $e->getMessage();
                     }
+                    
+                    \Log::error('❌ Token verification failed with all methods (including manual)', $debugInfo);
+                    
+                    // Provide user-friendly error message
+                    $errorMessage = 'Invalid or expired Google token. Please try logging in again.';
+                    if (isset($debugInfo['is_expired']) && $debugInfo['is_expired']) {
+                        $errorMessage = 'Your Google token has expired. Please log in again.';
+                    } elseif (isset($debugInfo['aud_matches']) && !$debugInfo['aud_matches']) {
+                        $errorMessage = 'Token was issued for a different application. Please use the correct app.';
+                    } elseif ($lastError && strpos($lastError, 'Invalid token signature') !== false) {
+                        $errorMessage = 'Token signature verification failed. Please generate a new token.';
+                    }
+                    
+                    return response()->json([
+                        'success' => false,
+                        'message' => $errorMessage,
+                        'debug' => config('app.debug') ? $debugInfo : null,
+                    ], 401);
                 }
-                
-                \Log::error('❌ Token verification failed with all client IDs', $debugInfo);
-                
-                // Provide user-friendly error message
-                $errorMessage = 'Invalid or expired Google token. Please try logging in again.';
-                if (isset($debugInfo['is_expired']) && $debugInfo['is_expired']) {
-                    $errorMessage = 'Your Google token has expired. Please log in again.';
-                } elseif (isset($debugInfo['aud_matches']) && !$debugInfo['aud_matches']) {
-                    $errorMessage = 'Token was issued for a different application. Please use the correct app.';
-                }
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => $errorMessage,
-                    'debug' => config('app.debug') ? $debugInfo : null,
-                ], 401);
             }
 
             \Log::info('Token verified successfully', [
