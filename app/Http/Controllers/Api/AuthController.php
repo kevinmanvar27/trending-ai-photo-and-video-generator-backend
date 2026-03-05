@@ -238,75 +238,75 @@ class AuthController extends Controller
                 ], 500);
             }
 
-            // Initialize Google Client with both client IDs (array format)
-            $client = new \Google\Client();
-            $client->setAuthConfig([
-                'web' => [
-                    'client_id' => $googleClientId
-                ]
-            ]);
+            \Log::info('Attempting token verification...');
             
-            \Log::info('Attempting token verification with multiple client IDs...');
-            
-            // Try to verify with web client ID first
+            // First, decode token to inspect aud and azp fields
             $payload = null;
-            try {
-                $payload = $client->verifyIdToken($request->id_token);
-            } catch (\Exception $e) {
-                \Log::info('Web client ID verification failed: ' . $e->getMessage());
-            }
+            $tokenParts = explode('.', $request->id_token);
             
-            // If verification fails with web client ID, try with Android client ID
-            if (!$payload) {
-                \Log::info('Trying Android client ID...');
+            if (count($tokenParts) === 3) {
                 try {
-                    $clientAndroid = new \Google\Client();
-                    $clientAndroid->setAuthConfig([
-                        'web' => [
-                            'client_id' => $googleClientIdAndroid
-                        ]
+                    // Decode JWT payload (base64 decode the middle part)
+                    $payloadData = json_decode(base64_decode(strtr($tokenParts[1], '-_', '+/')), true);
+                    
+                    $aud = $payloadData['aud'] ?? '';
+                    $azp = $payloadData['azp'] ?? '';
+                    
+                    \Log::info('Token payload decoded', [
+                        'aud' => $aud,
+                        'azp' => $azp,
+                        'email' => $payloadData['email'] ?? 'missing',
+                        'sub' => $payloadData['sub'] ?? 'missing',
                     ]);
-                    $payload = $clientAndroid->verifyIdToken($request->id_token);
+                    
+                    // Determine which client ID to use for verification
+                    // Priority: Check azp first (authorized party), then aud (audience)
+                    $clientIdToUse = $googleClientId; // Default to web
+                    
+                    if ($azp === $googleClientIdAndroid || $aud === $googleClientIdAndroid) {
+                        $clientIdToUse = $googleClientIdAndroid;
+                        \Log::info('Using Android client ID for verification');
+                    } else {
+                        \Log::info('Using Web client ID for verification');
+                    }
+                    
+                    // Verify token with the appropriate client ID
+                    $client = new \Google\Client(['client_id' => $clientIdToUse]);
+                    $payload = $client->verifyIdToken($request->id_token);
+                    
+                    if ($payload) {
+                        \Log::info('Token verified successfully with ' . ($clientIdToUse === $googleClientIdAndroid ? 'Android' : 'Web') . ' client ID');
+                    }
+                    
                 } catch (\Exception $e) {
-                    \Log::info('Android client ID verification failed: ' . $e->getMessage());
+                    \Log::error('Token verification error: ' . $e->getMessage());
                 }
             }
             
-            // Manual validation: Check if token's aud or azp matches either client ID
+            // Fallback: Try both client IDs if initial verification failed
             if (!$payload) {
-                \Log::info('Attempting manual token validation...');
+                \Log::info('Initial verification failed, trying both client IDs...');
+                
                 try {
-                    // Decode token without verification to check aud/azp
-                    $tokenParts = explode('.', $request->id_token);
-                    if (count($tokenParts) === 3) {
-                        $payloadData = json_decode(base64_decode(strtr($tokenParts[1], '-_', '+/')), true);
-                        
-                        \Log::info('Token payload decoded', [
-                            'aud' => $payloadData['aud'] ?? 'missing',
-                            'azp' => $payloadData['azp'] ?? 'missing',
-                            'email' => $payloadData['email'] ?? 'missing',
-                        ]);
-                        
-                        // Check if aud or azp matches either client ID
-                        $aud = $payloadData['aud'] ?? '';
-                        $azp = $payloadData['azp'] ?? '';
-                        
-                        if ($aud === $googleClientId || $aud === $googleClientIdAndroid || 
-                            $azp === $googleClientId || $azp === $googleClientIdAndroid) {
-                            
-                            \Log::info('Token aud/azp matches one of our client IDs, attempting verification with matching ID...');
-                            
-                            // Use the matching client ID for verification
-                            $matchingClientId = ($aud === $googleClientIdAndroid || $azp === $googleClientIdAndroid) 
-                                ? $googleClientIdAndroid 
-                                : $googleClientId;
-                            
-                            $clientMatching = new \Google\Client(['client_id' => $matchingClientId]);
-                            $payload = $clientMatching->verifyIdToken($request->id_token);
-                        }
+                    $client = new \Google\Client(['client_id' => $googleClientId]);
+                    $payload = $client->verifyIdToken($request->id_token);
+                    if ($payload) {
+                        \Log::info('Token verified with Web client ID');
                     }
                 } catch (\Exception $e) {
-                    \Log::error('Manual token validation failed: ' . $e->getMessage());
+                    \Log::info('Web client ID failed: ' . $e->getMessage());
+                }
+                
+                if (!$payload) {
+                    try {
+                        $clientAndroid = new \Google\Client(['client_id' => $googleClientIdAndroid]);
+                        $payload = $clientAndroid->verifyIdToken($request->id_token);
+                        if ($payload) {
+                            \Log::info('Token verified with Android client ID');
+                        }
+                    } catch (\Exception $e) {
+                        \Log::info('Android client ID failed: ' . $e->getMessage());
+                    }
                 }
             }
             
