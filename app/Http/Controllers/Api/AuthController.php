@@ -279,7 +279,10 @@ class AuthController extends Controller
                     }
                     
                 } catch (\Exception $e) {
-                    \Log::error('Token verification error: ' . $e->getMessage());
+                    \Log::error('Token verification error: ' . $e->getMessage(), [
+                        'exception_class' => get_class($e),
+                        'trace' => $e->getTraceAsString()
+                    ]);
                 }
             }
             
@@ -294,7 +297,10 @@ class AuthController extends Controller
                         \Log::info('Token verified with Web client ID');
                     }
                 } catch (\Exception $e) {
-                    \Log::info('Web client ID failed: ' . $e->getMessage());
+                    \Log::error('Web client ID failed', [
+                        'error' => $e->getMessage(),
+                        'exception_class' => get_class($e)
+                    ]);
                 }
                 
                 if (!$payload) {
@@ -305,7 +311,10 @@ class AuthController extends Controller
                             \Log::info('Token verified with Android client ID');
                         }
                     } catch (\Exception $e) {
-                        \Log::info('Android client ID failed: ' . $e->getMessage());
+                        \Log::error('Android client ID failed', [
+                            'error' => $e->getMessage(),
+                            'exception_class' => get_class($e)
+                        ]);
                     }
                 }
             }
