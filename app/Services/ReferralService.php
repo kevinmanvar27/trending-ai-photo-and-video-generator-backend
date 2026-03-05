@@ -21,6 +21,11 @@ class ReferralService
     const DEFAULT_NEW_USER_BONUS = 50;
     
     /**
+     * Default signup bonus coins (fallback if setting not found)
+     */
+    const DEFAULT_SIGNUP_BONUS = 0;
+    
+    /**
      * Get referral coins per referral from settings
      */
     public static function getReferralCoinsAmount()
@@ -37,11 +42,66 @@ class ReferralService
     }
     
     /**
+     * Get signup bonus coins from settings
+     */
+    public static function getSignupBonusAmount()
+    {
+        return (int) Setting::get('signup_bonus_coins', self::DEFAULT_SIGNUP_BONUS);
+    }
+    
+    /**
+     * Check if signup bonus is enabled
+     */
+    public static function isSignupBonusEnabled()
+    {
+        return Setting::getBool('signup_bonus_enabled', false);
+    }
+    
+    /**
      * Check if referral system is enabled
      */
     public static function isReferralSystemEnabled()
     {
         return Setting::getBool('referral_system_enabled', true);
+    }
+
+    /**
+     * Award signup bonus to a new user (regardless of referral code)
+     *
+     * @param int $userId
+     * @return int Coins awarded (0 if disabled or failed)
+     */
+    public static function awardSignupBonus($userId)
+    {
+        try {
+            // Check if signup bonus is enabled
+            if (!self::isSignupBonusEnabled()) {
+                return 0;
+            }
+
+            $bonusAmount = self::getSignupBonusAmount();
+            
+            // If bonus is 0, don't award anything
+            if ($bonusAmount <= 0) {
+                return 0;
+            }
+
+            $user = User::find($userId);
+            if (!$user) {
+                Log::error("User not found for signup bonus: {$userId}");
+                return 0;
+            }
+
+            // Award signup bonus coins
+            $user->increment('referral_coins', $bonusAmount);
+            
+            Log::info("Awarded {$bonusAmount} signup bonus coins to user {$userId}");
+            return $bonusAmount;
+
+        } catch (\Exception $e) {
+            Log::error('Error awarding signup bonus: ' . $e->getMessage());
+            return 0;
+        }
     }
 
     /**

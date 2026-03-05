@@ -37,6 +37,12 @@ class AuthController extends Controller
             'referral_code' => $referralCode,
         ]);
 
+        // Award signup bonus to ALL new users (regardless of referral code)
+        $signupBonusReceived = ReferralService::awardSignupBonus($user->id);
+        if ($signupBonusReceived > 0) {
+            $user->refresh(); // Refresh to get updated coins value
+        }
+
         // Apply referral code if provided and award bonus coins
         $bonusCoinsReceived = 0;
         if ($request->has('referral_code') && !empty($request->referral_code)) {
@@ -64,7 +70,9 @@ class AuthController extends Controller
                     'referral_coins' => $user->referral_coins,
                 ],
                 'token' => $token,
+                'signup_bonus_received' => $signupBonusReceived,
                 'bonus_coins_received' => $bonusCoinsReceived,
+                'total_coins_received' => $signupBonusReceived + $bonusCoinsReceived,
             ],
         ], 201);
     }
@@ -267,6 +275,12 @@ class AuthController extends Controller
                     'email_verified_at' => $emailVerified ? now() : null,
                 ]);
 
+                // Award signup bonus to ALL new users (regardless of referral code)
+                $signupBonusReceived = ReferralService::awardSignupBonus($user->id);
+                if ($signupBonusReceived > 0) {
+                    $user->refresh(); // Refresh to get updated coins value
+                }
+
                 // Apply referral code if provided and award bonus coins
                 $bonusCoinsReceived = 0;
                 if ($request->has('referral_code') && !empty($request->referral_code)) {
@@ -296,7 +310,9 @@ class AuthController extends Controller
                         ],
                         'token' => $token,
                         'is_new_user' => true,
+                        'signup_bonus_received' => $signupBonusReceived,
                         'bonus_coins_received' => $bonusCoinsReceived,
+                        'total_coins_received' => $signupBonusReceived + $bonusCoinsReceived,
                     ],
                 ], 201);
             }

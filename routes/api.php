@@ -22,6 +22,20 @@ Route::get('/subscription/plans', [SubscriptionController::class, 'plans']);
 // Public referral code validation
 Route::post('/referral/validate', [ReferralController::class, 'validateReferralCode']);
 
+// Public app configuration
+Route::get('/app/config', function () {
+    return response()->json([
+        'success' => true,
+        'data' => [
+            'referral_system_enabled' => \App\Models\Setting::getBool('referral_system_enabled', true),
+            'referral_bonus_for_new_user' => (int) \App\Models\Setting::get('referral_bonus_for_new_user', 50),
+            'signup_bonus_enabled' => \App\Models\Setting::getBool('signup_bonus_enabled', false),
+            'signup_bonus_coins' => (int) \App\Models\Setting::get('signup_bonus_coins', 0),
+            'google_login_enabled' => \App\Models\Setting::getBool('google_login_enabled', false),
+        ]
+    ]);
+});
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Authentication

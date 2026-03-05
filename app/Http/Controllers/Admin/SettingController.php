@@ -57,6 +57,9 @@ class SettingController extends Controller
             'referral_coins_per_referral' => 'nullable|integer|min:0|max:10000',
             'referral_bonus_for_new_user' => 'nullable|integer|min:0|max:10000',
             'referral_system_enabled' => 'nullable|in:0,1',
+            // Signup bonus settings
+            'signup_bonus_coins' => 'nullable|integer|min:0|max:10000',
+            'signup_bonus_enabled' => 'nullable|in:0,1',
             // Google authentication settings
             'google_client_id' => 'nullable|string|max:500',
             'google_login_enabled' => 'nullable|in:0,1',
@@ -129,6 +132,8 @@ class SettingController extends Controller
             // Referral settings
             'referral_coins_per_referral' => ['type' => 'number', 'group' => 'referral'],
             'referral_bonus_for_new_user' => ['type' => 'number', 'group' => 'referral'],
+            // Signup bonus settings
+            'signup_bonus_coins' => ['type' => 'number', 'group' => 'referral'],
             // Google authentication settings
             'google_client_id' => ['type' => 'text', 'group' => 'authentication'],
             // Footer settings
@@ -158,6 +163,9 @@ class SettingController extends Controller
         
         // Handle referral system enabled checkbox (receives '0' or '1' from hidden+checkbox combo)
         Setting::set('referral_system_enabled', $request->input('referral_system_enabled', '0'), 'boolean', 'referral');
+        
+        // Handle signup bonus enabled checkbox
+        Setting::set('signup_bonus_enabled', $request->input('signup_bonus_enabled', '0'), 'boolean', 'referral');
         
         // Handle google login enabled checkbox
         Setting::set('google_login_enabled', $request->input('google_login_enabled', '0'), 'boolean', 'authentication');

@@ -533,6 +533,90 @@
 
         <!-- Referral System Tab -->
         <div id="content-referral" class="tab-content hidden">
+            <!-- Signup Bonus Section -->
+            <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-800">
+                            <i class="fas fa-gift mr-2"></i>Signup Bonus Configuration
+                        </h2>
+                        <p class="text-gray-600 text-sm mt-1">
+                            Award coins to ALL new users when they register (works for mobile app only)
+                        </p>
+                    </div>
+                    <div class="flex items-center">
+                        <label class="flex items-center cursor-pointer">
+                            <div class="relative">
+                                <!-- Hidden input to ensure a value is always sent -->
+                                <input type="hidden" name="signup_bonus_enabled" value="0">
+                                <input type="checkbox" name="signup_bonus_enabled" value="1"
+                                    {{ old('signup_bonus_enabled', $settings->get('signup_bonus_enabled')->value ?? '0') == '1' ? 'checked' : '' }}
+                                    class="sr-only" id="signup-bonus-toggle">
+                                <div class="block bg-gray-300 w-14 h-8 rounded-full"></div>
+                                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
+                            </div>
+                            <div class="ml-3 text-gray-700 font-medium">
+                                <span id="signup-bonus-status-text">
+                                    {{ old('signup_bonus_enabled', $settings->get('signup_bonus_enabled')->value ?? '0') == '1' ? 'Enabled' : 'Disabled' }}
+                                </span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-purple-500 text-white rounded-full p-3 mr-4">
+                            <i class="fas fa-star text-2xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">Welcome Bonus</h3>
+                            <p class="text-sm text-gray-600">Coins for every new user registration</p>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">
+                            Signup Bonus Coins
+                        </label>
+                        <div class="relative">
+                            <input type="number" name="signup_bonus_coins" 
+                                value="{{ old('signup_bonus_coins', $settings->get('signup_bonus_coins')->value ?? '0') }}"
+                                class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 text-lg font-semibold leading-tight focus:outline-none focus:shadow-outline focus:border-purple-500"
+                                placeholder="0" min="0" max="10000" id="signup-bonus-coins">
+                            <div class="absolute right-3 top-3 text-gray-400">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-xs mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Given to ALL new users upon registration (0-10,000 coins)
+                        </p>
+                        <div class="mt-3 p-3 bg-white rounded border border-purple-200">
+                            <p class="text-sm text-gray-700">
+                                <strong>Example:</strong> If set to <span id="signup-bonus-preview" class="font-bold text-purple-600">{{ old('signup_bonus_coins', $settings->get('signup_bonus_coins')->value ?? '0') }}</span> coins, 
+                                every new user will receive <span id="signup-bonus-preview-2" class="font-bold text-purple-600">{{ old('signup_bonus_coins', $settings->get('signup_bonus_coins')->value ?? '0') }}</span> coins automatically on signup.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info Alert -->
+                <div class="mt-4 bg-blue-50 border-l-4 border-blue-400 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-mobile-alt text-blue-400 text-xl"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">Mobile App Only</h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                <p>This signup bonus is automatically awarded to new users registering through your mobile application. This is separate from the referral bonus below.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referral System Section -->
             <div class="bg-white shadow-md rounded-lg p-6 mb-6">
                 <div class="flex items-center justify-between mb-6">
                     <div>
@@ -1179,9 +1263,44 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // Signup Bonus Toggle
+    const signupToggle = document.getElementById('signup-bonus-toggle');
+    const signupStatusText = document.getElementById('signup-bonus-status-text');
+    
+    if (signupToggle) {
+        signupToggle.addEventListener('change', function() {
+            const isEnabled = this.checked;
+            signupStatusText.textContent = isEnabled ? 'Enabled' : 'Disabled';
+            
+            // Toggle styling
+            const toggleBg = this.parentElement.querySelector('.block');
+            const toggleDot = this.parentElement.querySelector('.dot');
+            
+            if (isEnabled) {
+                toggleBg.classList.remove('bg-gray-300');
+                toggleBg.classList.add('bg-purple-500');
+                toggleDot.style.transform = 'translateX(1.5rem)';
+            } else {
+                toggleBg.classList.remove('bg-purple-500');
+                toggleBg.classList.add('bg-gray-300');
+                toggleDot.style.transform = 'translateX(0)';
+            }
+        });
+        
+        // Set initial state
+        if (signupToggle.checked) {
+            const toggleBg = signupToggle.parentElement.querySelector('.block');
+            const toggleDot = signupToggle.parentElement.querySelector('.dot');
+            toggleBg.classList.remove('bg-gray-300');
+            toggleBg.classList.add('bg-purple-500');
+            toggleDot.style.transform = 'translateX(1.5rem)';
+        }
+    }
+    
     // Update preview values
     const referrerInput = document.getElementById('referrer-coins');
     const newUserInput = document.getElementById('new-user-coins');
+    const signupBonusInput = document.getElementById('signup-bonus-coins');
     
     if (referrerInput) {
         referrerInput.addEventListener('input', updateReferralPreview);
@@ -1189,10 +1308,22 @@ document.addEventListener('DOMContentLoaded', function() {
     if (newUserInput) {
         newUserInput.addEventListener('input', updateReferralPreview);
     }
+    if (signupBonusInput) {
+        signupBonusInput.addEventListener('input', updateSignupBonusPreview);
+    }
     
     // Initial preview update
     updateReferralPreview();
+    updateSignupBonusPreview();
 });
+
+function updateSignupBonusPreview() {
+    const signupBonus = parseInt(document.getElementById('signup-bonus-coins')?.value || 0);
+    
+    // Update preview texts
+    const signupBonusPreviews = document.querySelectorAll('#signup-bonus-preview, #signup-bonus-preview-2');
+    signupBonusPreviews.forEach(el => el.textContent = signupBonus);
+}
 
 function updateReferralPreview() {
     const referrerCoins = parseInt(document.getElementById('referrer-coins')?.value || 0);

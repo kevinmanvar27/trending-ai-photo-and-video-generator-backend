@@ -19,6 +19,8 @@ class ReferralSettingsController extends Controller
                 'referral_coins_per_referral' => (int) Setting::get('referral_coins_per_referral', 100),
                 'referral_bonus_for_new_user' => (int) Setting::get('referral_bonus_for_new_user', 50),
                 'referral_system_enabled' => Setting::getBool('referral_system_enabled', true),
+                'signup_bonus_coins' => (int) Setting::get('signup_bonus_coins', 0),
+                'signup_bonus_enabled' => Setting::getBool('signup_bonus_enabled', false),
             ];
 
             return response()->json([
@@ -114,7 +116,9 @@ class ReferralSettingsController extends Controller
         $validator = Validator::make($request->all(), [
             'referral_coins_per_referral' => 'required|integer|min:0|max:10000',
             'referral_bonus_for_new_user' => 'required|integer|min:0|max:10000',
-            'referral_system_enabled' => 'required|boolean'
+            'referral_system_enabled' => 'required|boolean',
+            'signup_bonus_coins' => 'nullable|integer|min:0|max:10000',
+            'signup_bonus_enabled' => 'nullable|boolean'
         ]);
 
         if ($validator->fails()) {
@@ -129,6 +133,14 @@ class ReferralSettingsController extends Controller
             Setting::set('referral_coins_per_referral', $request->referral_coins_per_referral, 'number', 'referral');
             Setting::set('referral_bonus_for_new_user', $request->referral_bonus_for_new_user, 'number', 'referral');
             Setting::set('referral_system_enabled', $request->referral_system_enabled ? '1' : '0', 'boolean', 'referral');
+            
+            // Update signup bonus settings if provided
+            if ($request->has('signup_bonus_coins')) {
+                Setting::set('signup_bonus_coins', $request->signup_bonus_coins, 'number', 'referral');
+            }
+            if ($request->has('signup_bonus_enabled')) {
+                Setting::set('signup_bonus_enabled', $request->signup_bonus_enabled ? '1' : '0', 'boolean', 'referral');
+            }
 
             return response()->json([
                 'success' => true,
@@ -136,7 +148,9 @@ class ReferralSettingsController extends Controller
                 'data' => [
                     'referral_coins_per_referral' => (int) $request->referral_coins_per_referral,
                     'referral_bonus_for_new_user' => (int) $request->referral_bonus_for_new_user,
-                    'referral_system_enabled' => (bool) $request->referral_system_enabled
+                    'referral_system_enabled' => (bool) $request->referral_system_enabled,
+                    'signup_bonus_coins' => (int) ($request->signup_bonus_coins ?? Setting::get('signup_bonus_coins', 0)),
+                    'signup_bonus_enabled' => (bool) ($request->signup_bonus_enabled ?? Setting::getBool('signup_bonus_enabled', false))
                 ]
             ]);
         } catch (\Exception $e) {
