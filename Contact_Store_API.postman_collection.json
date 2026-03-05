@@ -1,0 +1,50 @@
+{
+  "info": {
+    "name": "Contact Store API",
+    "description": "Simple API to store contacts from Flutter app",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "YOUR_BEARER_TOKEN_HERE",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Store Contacts",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}",
+            "type": "text"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"contacts\": [\n    {\n      \"name\": \"John Doe\",\n      \"phone_number\": \"+1234567890\"\n    },\n    {\n      \"name\": \"Jane Smith\",\n      \"phone_number\": \"+0987654321\"\n    },\n    {\n      \"name\": \"Bob Wilson\",\n      \"phone_number\": \"9876543210\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/contacts/store",
+          "host": ["{{base_url}}"],
+          "path": ["contacts", "store"]
+        },
+        "description": "Store contacts from user's device to database"
+      },
+      "response": []
+    }
+  ]
+}

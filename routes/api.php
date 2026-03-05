@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\TemplateController;
 use App\Http\Controllers\Api\GenerationController;
 use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\Admin\ReferralSettingsController;
 
 // Public routes
@@ -110,6 +111,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/apply', [ReferralController::class, 'applyReferralCode']);
         Route::post('/redeem', [ReferralController::class, 'redeemCoins']);
     });
+    
+    // Contact Management - Store contacts from device
+    Route::post('/contacts/store', [ContactController::class, 'storeContacts']);
 });
 
 // Admin routes (protected with admin middleware)
