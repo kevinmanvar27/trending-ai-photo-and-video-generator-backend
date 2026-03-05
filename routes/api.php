@@ -14,6 +14,22 @@ use App\Http\Controllers\Api\Admin\ReferralSettingsController;
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+// Test endpoint to check Google login configuration
+Route::post('/test-google-config', function() {
+    $googleLoginEnabled = \App\Models\Setting::getBool('google_login_enabled', false);
+    $googleClientId = \App\Models\Setting::get('google_client_id');
+    
+    return response()->json([
+        'success' => true,
+        'google_login_enabled' => $googleLoginEnabled,
+        'google_client_id' => $googleClientId,
+        'google_client_id_set' => !empty($googleClientId),
+        'google_client_id_length' => strlen($googleClientId ?? ''),
+        'timestamp' => now()->toISOString(),
+    ]);
+});
+
 Route::post('/google-login', [AuthController::class, 'googleLogin']);
 
 // Public subscription plans (can be viewed without auth)
@@ -78,6 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/info', [ReferralController::class, 'getReferralInfo']);
         Route::get('/list', [ReferralController::class, 'getReferralList']);
         Route::get('/stats', [ReferralController::class, 'getReferralStats']);
+        Route::post('/apply', [ReferralController::class, 'applyReferralCode']);
         Route::post('/redeem', [ReferralController::class, 'redeemCoins']);
     });
 });

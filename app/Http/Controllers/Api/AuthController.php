@@ -186,26 +186,48 @@ class AuthController extends Controller
      */
     public function googleLogin(Request $request)
     {
+        // Log incoming request
+        \Log::info('=== GOOGLE LOGIN REQUEST ===', [
+            'timestamp' => now(),
+            'ip' => $request->ip(),
+            'has_id_token' => $request->has('id_token'),
+            'id_token_length' => $request->has('id_token') ? strlen($request->id_token) : 0,
+        ]);
+
         // Check if Google login is enabled
         $googleLoginEnabled = Setting::getBool('google_login_enabled', false);
         
+        \Log::info('Google login enabled check', ['enabled' => $googleLoginEnabled]);
+        
         if (!$googleLoginEnabled) {
+            \Log::warning('Google login is disabled');
             return response()->json([
                 'success' => false,
                 'message' => 'Google login is currently disabled',
             ], 403);
         }
 
-        $request->validate([
-            'id_token' => 'required|string',
-            'referral_code' => 'nullable|string|max:20',
-        ]);
+        try {
+            $request->validate([
+                'id_token' => 'required|string',
+                'referral_code' => 'nullable|string|max:20',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed', ['errors' => $e->errors()]);
+            throw $e;
+        }
 
         try {
             // Get Google Client ID from settings
             $googleClientId = Setting::get('google_client_id');
             
+            \Log::info('Google Client ID', [
+                'client_id' => $googleClientId,
+                'is_empty' => empty($googleClientId),
+            ]);
+            
             if (empty($googleClientId)) {
+                \Log::error('Google Client ID not configured');
                 return response()->json([
                     'success' => false,
                     'message' => 'Google login is not properly configured. Please contact administrator.',
@@ -215,15 +237,25 @@ class AuthController extends Controller
             // Initialize Google Client
             $client = new \Google\Client(['client_id' => $googleClientId]);
             
+            \Log::info('Attempting token verification...');
+            
             // Verify the ID token
             $payload = $client->verifyIdToken($request->id_token);
             
             if (!$payload) {
+                \Log::error('Token verification failed', [
+                    'token_preview' => substr($request->id_token, 0, 50) . '...',
+                ]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Invalid Google token',
                 ], 401);
             }
+
+            \Log::info('Token verified successfully', [
+                'email' => $payload['email'] ?? 'unknown',
+                'sub' => $payload['sub'] ?? 'unknown',
+            ]);
 
             // Extract user information from Google payload
             $googleId = $payload['sub'];
@@ -235,8 +267,11 @@ class AuthController extends Controller
             $user = User::where('email', $email)->first();
 
             if ($user) {
+                \Log::info('Existing user found', ['user_id' => $user->id, 'email' => $email]);
+                
                 // User exists - check if suspended
                 if ($user->isSuspended()) {
+                    \Log::warning('User is suspended', ['user_id' => $user->id]);
                     return response()->json([
                         'success' => false,
                         'message' => 'Your account has been suspended.',
@@ -246,6 +281,8 @@ class AuthController extends Controller
 
                 // Login existing user
                 $token = $user->createToken('mobile-app')->plainTextToken;
+
+                \Log::info('User logged in successfully', ['user_id' => $user->id]);
 
                 return response()->json([
                     'success' => true,
@@ -263,6 +300,7 @@ class AuthController extends Controller
                     ],
                 ]);
             } else {
+                \Log::info('Creating new user', ['email' => $email, 'name' => $name]);
                 // Create new user
                 $referralCode = User::generateReferralCode();
                 
@@ -297,6 +335,13 @@ class AuthController extends Controller
                 // Create token for new user
                 $token = $user->createToken('mobile-app')->plainTextToken;
 
+                \Log::info('New user created successfully', [
+                    'user_id' => $user->id,
+                    'email' => $email,
+                    'signup_bonus' => $signupBonusReceived,
+                    'referral_bonus' => $bonusCoinsReceived,
+                ]);
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Registration successful',
@@ -318,12 +363,26 @@ class AuthController extends Controller
             }
 
         } catch (\Google\Exception $e) {
+            \Log::error('Google Exception in googleLogin', [
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Google authentication failed',
                 'error' => $e->getMessage(),
             ], 401);
         } catch (\Exception $e) {
+            \Log::error('Exception in googleLogin', [
+                'message' => $e->getMessage(),
+                'code' => $e->getCode(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Authentication error occurred',

@@ -139,6 +139,59 @@ class ReferralController extends Controller
     }
 
     /**
+     * Apply a referral code to the current user
+     */
+    public function applyReferralCode(Request $request)
+    {
+        $request->validate([
+            'referral_code' => 'required|string|max:20',
+        ]);
+
+        $user = $request->user();
+
+        // Check if referral system is enabled
+        if (!ReferralService::isReferralSystemEnabled()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Referral system is currently disabled',
+            ], 403);
+        }
+
+        // Check if user already has a referrer
+        if ($user->referred_by) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You have already applied a referral code',
+            ], 400);
+        }
+
+        // Apply the referral code
+        $result = ReferralService::applyReferralCode($user->id, $request->referral_code);
+
+        if (!$result) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid referral code or unable to apply',
+            ], 400);
+        }
+
+        // Award new user bonus if enabled
+        $bonusAmount = ReferralService::getNewUserBonusAmount();
+        if ($bonusAmount > 0) {
+            $user->increment('referral_coins', $bonusAmount);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Referral code applied successfully',
+            'data' => [
+                'bonus_coins_awarded' => $bonusAmount,
+                'total_referral_coins' => $user->fresh()->referral_coins,
+            ],
+        ]);
+    }
+
+    /**
      * Redeem referral coins (convert to subscription coins or other benefits)
      */
     public function redeemCoins(Request $request)
