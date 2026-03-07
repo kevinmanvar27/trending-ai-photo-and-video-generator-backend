@@ -74,6 +74,7 @@ class GenerationController extends Controller
                     'template_id' => $template->id,
                     'original_image_path' => $originalPath,
                     'status' => 'pending',
+                    'coins_used' => $coinsRequired,
                     'started_at' => now(),
                 ]);
 
@@ -214,6 +215,7 @@ class GenerationController extends Controller
                             'id' => $submission->template->id,
                             'name' => $submission->template->title,
                         ],
+                        'coins_used' => $submission->coins_used ?? 0,
                         'completed_at' => $submission->completed_at,
                     ],
                     'message' => 'Generation completed successfully'
@@ -229,6 +231,7 @@ class GenerationController extends Controller
                         'submission_id' => $submission->id,
                         'status' => $submission->status,
                         'error' => $submission->error_message ?? 'Failed to process image. Please try again.',
+                        'coins_used' => $submission->coins_used ?? 0,
                         'failed_at' => $submission->completed_at,
                     ],
                     'message' => 'Generation failed'
@@ -318,6 +321,7 @@ class GenerationController extends Controller
                         : null,
                     'status' => $submission->status,
                     'type' => $submission->output_type ?? $submission->template->type,
+                    'coins_used' => $submission->coins_used ?? 0,
                     'created_at' => $submission->created_at,
                     'completed_at' => $submission->completed_at,
                 ];

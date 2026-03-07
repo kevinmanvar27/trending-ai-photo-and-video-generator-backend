@@ -18,6 +18,7 @@ class UserImageSubmission extends Model
         'status',
         'error_message',
         'processing_time',
+        'coins_used',
         'started_at',
         'completed_at',
     ];
