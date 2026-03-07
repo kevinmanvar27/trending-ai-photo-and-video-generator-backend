@@ -163,7 +163,11 @@ class AuthController extends Controller
                 'status' => $activeSubscription->status,
                 'expires_at' => $activeSubscription->expires_at,
                 'days_remaining' => $daysRemaining,
-                'remaining_coins' => $activeSubscription->remaining_coins,
+                'subscription_coins' => [
+                    'total' => $activeSubscription->plan->coins ?? 0,
+                    'used' => $activeSubscription->coins_used ?? 0,
+                    'remaining' => $activeSubscription->remaining_coins,
+                ],
             ];
         }
 
@@ -174,6 +178,13 @@ class AuthController extends Controller
             'total_referrals' => $user->referrals()->count(),
         ];
 
+        // Calculate total available coins
+        $totalAvailableCoins = $user->referral_coins + ($activeSubscription ? $activeSubscription->remaining_coins : 0);
+
+        // Calculate total coins used across all submissions
+        $totalCoinsUsedAllTime = \App\Models\UserImageSubmission::where('user_id', $user->id)
+            ->sum('coins_used');
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -181,10 +192,19 @@ class AuthController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone ?? null,
-                'avatar' => $user->avatar, // Return avatar URL
+                'avatar' => $user->avatar,
                 'created_at' => $user->created_at,
                 'subscription' => $subscriptionData,
                 'referral' => $referralStats,
+                'coins_summary' => [
+                    'total_available' => $totalAvailableCoins,
+                    'referral_coins' => $user->referral_coins,
+                    'subscription_coins' => $activeSubscription ? $activeSubscription->remaining_coins : 0,
+                    'total_used_all_time' => $totalCoinsUsedAllTime,
+                ],
+                'statistics' => [
+                    'total_generations' => \App\Models\UserImageSubmission::where('user_id', $user->id)->count(),
+                ],
             ],
         ]);
     }

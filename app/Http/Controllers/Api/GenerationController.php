@@ -50,14 +50,22 @@ class GenerationController extends Controller
             // Get coins required for this template
             $coinsRequired = $template->coins_required ?? $this->getCoinsRequired($template->type);
 
-            // Check if user has enough coins
-            $remainingCoins = $subscription->remaining_coins;
-            if ($remainingCoins < $coinsRequired) {
+            // Calculate total available coins (referral + subscription)
+            $referralCoins = $user->referral_coins ?? 0;
+            $subscriptionCoins = $subscription->remaining_coins;
+            $totalAvailableCoins = $referralCoins + $subscriptionCoins;
+
+            // Check if user has enough coins total
+            if ($totalAvailableCoins < $coinsRequired) {
                 return response()->json([
                     'success' => false,
-                    'message' => "Insufficient coins. You need {$coinsRequired} coins but have {$remainingCoins} coins remaining.",
+                    'message' => "Insufficient coins. You need {$coinsRequired} coins but have {$totalAvailableCoins} coins available.",
                     'coins_required' => $coinsRequired,
-                    'coins_available' => $remainingCoins
+                    'coins_available' => [
+                        'referral_coins' => $referralCoins,
+                        'subscription_coins' => $subscriptionCoins,
+                        'total' => $totalAvailableCoins,
+                    ]
                 ], 403);
             }
 
@@ -68,6 +76,25 @@ class GenerationController extends Controller
                 $originalPath = $request->file('image')
                     ->store('user-submissions/originals', 'public');
 
+                // Deduct coins logic: Use referral coins first, then subscription coins
+                $coinsFromReferral = 0;
+                $coinsFromSubscription = 0;
+
+                if ($referralCoins >= $coinsRequired) {
+                    // Use only referral coins
+                    $coinsFromReferral = $coinsRequired;
+                    $user->decrement('referral_coins', $coinsRequired);
+                } else {
+                    // Use all referral coins + some subscription coins
+                    $coinsFromReferral = $referralCoins;
+                    $coinsFromSubscription = $coinsRequired - $referralCoins;
+                    
+                    if ($referralCoins > 0) {
+                        $user->decrement('referral_coins', $referralCoins);
+                    }
+                    $subscription->increment('coins_used', $coinsFromSubscription);
+                }
+
                 // Create submission record
                 $submission = UserImageSubmission::create([
                     'user_id' => $user->id,
@@ -75,11 +102,10 @@ class GenerationController extends Controller
                     'original_image_path' => $originalPath,
                     'status' => 'pending',
                     'coins_used' => $coinsRequired,
+                    'coins_from_referral' => $coinsFromReferral,
+                    'coins_from_subscription' => $coinsFromSubscription,
                     'started_at' => now(),
                 ]);
-
-                // Deduct coins BEFORE processing
-                $subscription->increment('coins_used', $coinsRequired);
 
                 // Increment template usage
                 $template->incrementUsage();
@@ -103,6 +129,10 @@ class GenerationController extends Controller
                 // Get estimated time based on type
                 $estimatedTime = $template->type === 'video' ? 120 : 30;
 
+                // Refresh user and subscription to get updated coins
+                $user->refresh();
+                $subscription->refresh();
+
                 return response()->json([
                     'success' => true,
                     'data' => [
@@ -115,8 +145,16 @@ class GenerationController extends Controller
                         'applied_prompt' => $template->prompt,
                         'estimated_time' => $estimatedTime,
                         'created_at' => $submission->created_at,
-                        'coins_deducted' => $coinsRequired,
-                        'remaining_coins' => $subscription->remaining_coins - $coinsRequired,
+                        'coins_breakdown' => [
+                            'total_deducted' => $coinsRequired,
+                            'from_referral' => $coinsFromReferral,
+                            'from_subscription' => $coinsFromSubscription,
+                        ],
+                        'remaining_coins' => [
+                            'referral_coins' => $user->referral_coins,
+                            'subscription_coins' => $subscription->remaining_coins,
+                            'total' => $user->referral_coins + $subscription->remaining_coins,
+                        ],
                     ],
                     'message' => 'Image uploaded successfully. Generation in progress.'
                 ]);
