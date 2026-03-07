@@ -65,6 +65,7 @@ class ImagePromptTemplateController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'type' => 'required|in:image,video',
+            'coins_required' => 'required|integer|min:1|max:1000',
             'description' => 'nullable|string|max:1000',
             'reference_image' => 'nullable|file|mimes:jpeg,jpg,png,gif,mp4,mov,avi,webm|max:51200', // 50MB for videos
             'prompt' => 'required|string|max:2000',
@@ -78,7 +79,7 @@ class ImagePromptTemplateController extends Controller
         }
 
         try {
-            $data = $request->only(['title', 'type', 'description', 'prompt']);
+            $data = $request->only(['title', 'type', 'coins_required', 'description', 'prompt']);
             $data['is_active'] = $request->has('is_active');
 
             // Store reference image if provided
@@ -134,6 +135,7 @@ class ImagePromptTemplateController extends Controller
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'type' => 'required|in:image,video',
+            'coins_required' => 'required|integer|min:1|max:1000',
             'description' => 'nullable|string|max:1000',
             'reference_image' => 'nullable|file|mimes:jpeg,jpg,png,gif,mp4,mov,avi,webm|max:51200',
             'prompt' => 'required|string|max:2000',
@@ -147,7 +149,7 @@ class ImagePromptTemplateController extends Controller
         }
 
         try {
-            $data = $request->only(['title', 'type', 'description', 'prompt']);
+            $data = $request->only(['title', 'type', 'coins_required', 'description', 'prompt']);
             $data['is_active'] = $request->has('is_active');
 
             // Update reference image if provided

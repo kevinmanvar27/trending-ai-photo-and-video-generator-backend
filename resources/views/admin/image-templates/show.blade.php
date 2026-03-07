@@ -42,6 +42,27 @@
         </div>
         @endif
 
+        <!-- Template Info Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <!-- Type -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Template Type</h3>
+                <div class="flex items-center">
+                    <i class="fas fa-{{ $template->type == 'video' ? 'video' : 'image' }} text-blue-500 text-2xl mr-3"></i>
+                    <span class="text-lg font-semibold text-gray-800">{{ ucfirst($template->type) }}</span>
+                </div>
+            </div>
+
+            <!-- Coins Required -->
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Coins Required</h3>
+                <div class="flex items-center">
+                    <i class="fas fa-coins text-yellow-500 text-2xl mr-3"></i>
+                    <span class="text-lg font-semibold text-gray-800">{{ $template->coins_required ?? 5 }} Coins</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Reference Media -->
         @if($template->reference_image_path)
         <div class="mb-6">
